@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* --- Distributed Systems Hub design tokens --- */
+  --color-ink:          #0A1120;
+  --color-ink-soft:     #0D1626;
+  --color-surface:      #121C31;
+  --color-surface-2:    #16223B;
+  --color-hairline:     #24324E;
+  --color-hairline-lit: #33456A;
+
+  --color-text:        #E8ECF6;
+  --color-text-muted:  #8B97B0;
+  --color-text-faint:  #5C6884;
+
+  --color-signal:      #6FB7FF; /* ice-blue: primary accent, "live link" */
+  --color-signal-dim:  #3A6FA6;
+  --color-amber:       #E8A33D; /* recall / flashcard accent */
+  --color-amber-dim:   #8A6428;
+  --color-quorum:      #4CBB8A; /* success / correct / replicated */
+  --color-partition:   #E15A5A; /* error / incorrect / node-down */
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Source Serif 4', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--color-hairline) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-signal-dim);
+  color: var(--color-text);
+}
+
+* {
+  scrollbar-color: var(--color-hairline-lit) transparent;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
