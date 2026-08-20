@@ -4,6 +4,7 @@ const week1: WeekData = {
   week: 1,
   title: "Introduction to Distributed Systems",
   status: "ready",
+  pdfUrl: "/pdfs/week1-lecture-notes.pdf",
 
   notes: [
     {

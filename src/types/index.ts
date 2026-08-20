@@ -31,6 +31,7 @@ export interface WeekData {
   status: "empty" | "in-progress" | "ready";
   notes: NoteSection[];
   slides: SlideRef[];
+  pdfUrl?: string; // path to the full lecture-notes PDF for this week (in /public)
   mcqs: Mcq[];
   flashcards: Flashcard[];
 }

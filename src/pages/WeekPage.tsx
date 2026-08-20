@@ -93,8 +93,12 @@ export default function WeekPage() {
       </div>
 
       <div>
-        {tab === "notes" && <NotesView notes={week.notes} />}
-        {tab === "slides" && <SlidesView slides={week.slides} />}
+        {tab === "notes" && (
+          <div className="max-w-[68ch]">
+            <NotesView notes={week.notes} />
+          </div>
+        )}
+        {tab === "slides" && <SlidesView slides={week.slides} pdfUrl={week.pdfUrl} />}
         {tab === "mcqs" && <McqView mcqs={week.mcqs} />}
         {tab === "flashcards" && <FlashcardView cards={week.flashcards} />}
       </div>

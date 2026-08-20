@@ -2,28 +2,56 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- Distributed Systems Hub design tokens --- */
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Source Serif 4', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* --- Dark theme (default) --- */
+:root,
+[data-theme="dark"] {
   --color-ink:          #0A1120;
   --color-ink-soft:     #0D1626;
   --color-surface:      #121C31;
   --color-surface-2:    #16223B;
-  --color-hairline:     #24324E;
-  --color-hairline-lit: #33456A;
+  --color-hairline:     #263250;
+  --color-hairline-lit: #37486e;
 
-  --color-text:        #E8ECF6;
-  --color-text-muted:  #8B97B0;
-  --color-text-faint:  #5C6884;
+  --color-text:        #EDF1F9;
+  --color-text-muted:  #A2AEC6;
+  --color-text-faint:  #6C7896;
 
-  --color-signal:      #6FB7FF; /* ice-blue: primary accent, "live link" */
+  --color-signal:      #7CC1FF;
   --color-signal-dim:  #3A6FA6;
-  --color-amber:       #E8A33D; /* recall / flashcard accent */
+  --color-amber:       #F0B25E;
   --color-amber-dim:   #8A6428;
-  --color-quorum:      #4CBB8A; /* success / correct / replicated */
-  --color-partition:   #E15A5A; /* error / incorrect / node-down */
+  --color-quorum:      #59CC9B;
+  --color-partition:   #F17272;
 
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-body: 'Source Serif 4', ui-serif, Georgia, serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --bg-dot-opacity: 0.55;
+}
+
+/* --- Light theme --- */
+[data-theme="light"] {
+  --color-ink:          #F6F7FA;
+  --color-ink-soft:     #FFFFFF;
+  --color-surface:      #FFFFFF;
+  --color-surface-2:    #F0F2F7;
+  --color-hairline:     #DCE1EB;
+  --color-hairline-lit: #C2CADC;
+
+  --color-text:        #131A2B;
+  --color-text-muted:  #4C5877;
+  --color-text-faint:  #8791A9;
+
+  --color-signal:      #2C6FC9;
+  --color-signal-dim:  #AFCBEE;
+  --color-amber:       #B4741A;
+  --color-amber-dim:   #F1D9AF;
+  --color-quorum:      #1F9563;
+  --color-partition:   #D6403F;
+
+  --bg-dot-opacity: 0.35;
 }
 
 html, body, #root {
@@ -38,6 +66,8 @@ body {
     radial-gradient(circle at 1px 1px, var(--color-hairline) 1px, transparent 1px);
   background-size: 28px 28px;
   background-attachment: fixed;
+  opacity: 1;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 ::selection {
@@ -62,3 +92,34 @@ body {
   outline: 2px solid var(--color-signal);
   outline-offset: 2px;
 }
+
+/* Reading typography for note prose */
+.prose-notes {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.prose-notes p {
+  margin-bottom: 1.1em;
+}
+.prose-notes strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.prose-notes ul, .prose-notes ol {
+  margin: 0.9em 0 1.1em 1.3em;
+}
+.prose-notes li {
+  margin-bottom: 0.5em;
+}
+.prose-notes li > ul, .prose-notes li > ol {
+  margin-top: 0.5em;
+}
+.prose-notes code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-hairline);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+}
+
