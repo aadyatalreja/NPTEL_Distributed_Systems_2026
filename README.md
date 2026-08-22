@@ -8,6 +8,10 @@ built up one week at a time.
 No backend. All content lives in plain TypeScript data files, so it deploys
 as a static site and costs nothing to host.
 
+---
+##### Disclaimer: This is an independent, community-built study resource for NPTEL Distributed Systems 2026. It is not affiliated with, endorsed by, sponsored by, or officially associated with NPTEL, IITs, or any other institution mentioned in the course materials. All NPTEL course content, trademarks, and related materials remain the property of their respective owners.
+---
+
 ## Stack
 - React + TypeScript + Vite
 - Tailwind CSS v4
