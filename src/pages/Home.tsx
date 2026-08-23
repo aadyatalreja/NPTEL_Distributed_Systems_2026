@@ -8,6 +8,19 @@ export default function Home() {
 
   return (
     <Shell>
+      <div
+        className="mb-8 text-xs px-3 py-2 rounded-md border"
+        style={{
+          borderColor: "var(--color-hairline)",
+          background: "var(--color-surface-2)",
+          color: "var(--color-text-faint)",
+        }}
+      >
+        Disclaimer : For personal revision/studying only. Not affiliated with, endorsed by,
+        or officially associated with NPTEL, IITs, or any institution behind
+        the course materials referenced here.
+      </div>
+
       <div className="mb-10">
         <p
           className="text-sm mb-3"

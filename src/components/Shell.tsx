@@ -29,10 +29,14 @@ export default function Shell({ children }: { children: ReactNode }) {
 
       <footer className="border-t" style={{ borderColor: "var(--color-hairline)" }}>
         <div
-          className="max-w-3xl mx-auto px-6 py-5 text-xs"
+          className="max-w-3xl mx-auto px-6 py-5 text-xs space-y-1"
           style={{ color: "var(--color-text-faint)" }}
         >
-          A self-hosted study companion &middot; nothing you do here leaves your browser
+          <p>
+            For personal revision/studying only. Not affiliated with, endorsed by, or
+            officially associated with NPTEL, IITs, or any institution behind the course
+            materials referenced here.
+          </p>
         </div>
       </footer>
     </div>
