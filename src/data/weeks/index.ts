@@ -1,5 +1,6 @@
 import type { WeekData } from "../../types";
 import week1 from "./week1";
+import week2 from "./week2";
 
 const emptyWeek = (n: number, title: string): WeekData => ({
   week: n,
@@ -13,7 +14,7 @@ const emptyWeek = (n: number, title: string): WeekData => ({
 
 export const weeks: WeekData[] = [
   week1,
-  emptyWeek(2, "Week 2"),
+  week2,
   emptyWeek(3, "Week 3"),
   emptyWeek(4, "Week 4"),
   emptyWeek(5, "Week 5"),
