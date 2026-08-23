@@ -38,11 +38,8 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
   if (done) {
     return (
       <div className="text-center py-16">
-        <p
-          className="text-xs uppercase tracking-[0.2em] mb-4"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
-        >
-          deck complete
+        <p className="text-sm mb-3" style={{ color: "var(--color-text-muted)" }}>
+          Deck complete
         </p>
         <p className="mb-8" style={{ color: "var(--color-text-muted)" }}>
           {known.size} known &middot; {review.size} need review
@@ -50,7 +47,7 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
         <div className="flex gap-3 justify-center">
           <button
             onClick={() => restart(false)}
-            className="focus-ring rounded-md px-4 py-2 text-sm font-[var(--font-display)]"
+            className="focus-ring rounded-md px-4 py-2 text-sm font-medium"
             style={{ background: "var(--color-surface-2)", border: "1px solid var(--color-hairline)" }}
           >
             Go again
@@ -58,8 +55,8 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
           {review.size > 0 && (
             <button
               onClick={() => restart(true)}
-              className="focus-ring rounded-md px-4 py-2 text-sm font-[var(--font-display)]"
-              style={{ background: "var(--color-amber-dim)", color: "var(--color-text)" }}
+              className="focus-ring rounded-md px-4 py-2 text-sm font-medium"
+              style={{ background: "var(--color-accent)", color: "white" }}
             >
               Drill the {review.size} I missed
             </button>
@@ -72,16 +69,16 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
   return (
     <div>
       <div
-        className="flex items-center justify-between mb-6 text-xs"
-        style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
+        className="flex items-center justify-between mb-6 text-sm"
+        style={{ color: "var(--color-text-faint)" }}
       >
         <span>
-          card {i + 1} / {order.length}
+          Card {i + 1} of {order.length}
         </span>
         <span>
-          <span style={{ color: "var(--color-quorum)" }}>{known.size} known</span>
+          <span style={{ color: "var(--color-success)" }}>{known.size} known</span>
           {"  ·  "}
-          <span style={{ color: "var(--color-amber)" }}>{review.size} review</span>
+          <span style={{ color: "var(--color-warning)" }}>{review.size} review</span>
         </span>
       </div>
 
@@ -89,16 +86,13 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
         onClick={() => setFlipped((f) => !f)}
         className="focus-ring w-full rounded-xl border px-8 py-16 text-center transition-colors"
         style={{
-          borderColor: flipped ? "var(--color-amber)" : "var(--color-hairline)",
+          borderColor: flipped ? "var(--color-accent)" : "var(--color-hairline)",
           background: "var(--color-surface)",
           minHeight: 220,
         }}
       >
-        <p
-          className="text-xs uppercase tracking-widest mb-4"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
-        >
-          {flipped ? "answer" : "prompt · tap to reveal"}
+        <p className="text-sm mb-4" style={{ color: "var(--color-text-faint)" }}>
+          {flipped ? "Answer" : "Prompt · tap to reveal"}
         </p>
         <p className="text-lg leading-relaxed font-medium">{flipped ? card.back : card.front}</p>
       </button>
@@ -107,15 +101,15 @@ export default function FlashcardView({ cards }: { cards: Flashcard[] }) {
         <div className="flex gap-3 justify-center mt-6">
           <button
             onClick={() => advance("review")}
-            className="focus-ring rounded-md px-5 py-2.5 text-sm font-[var(--font-display)]"
-            style={{ border: `1px solid var(--color-partition)`, color: "var(--color-partition)" }}
+            className="focus-ring rounded-md px-5 py-2.5 text-sm font-medium"
+            style={{ border: `1px solid var(--color-danger)`, color: "var(--color-danger)" }}
           >
             Still shaky
           </button>
           <button
             onClick={() => advance("known")}
-            className="focus-ring rounded-md px-5 py-2.5 text-sm font-[var(--font-display)]"
-            style={{ background: "var(--color-quorum)", color: "var(--color-ink)" }}
+            className="focus-ring rounded-md px-5 py-2.5 text-sm font-medium"
+            style={{ background: "var(--color-success)", color: "white" }}
           >
             Knew it
           </button>

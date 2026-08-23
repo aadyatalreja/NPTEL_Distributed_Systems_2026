@@ -17,29 +17,24 @@ export default function SlidesView({ slides, pdfUrl }: { slides: SlideRef[]; pdf
             className="flex items-center justify-between px-5 py-3 border-b"
             style={{ borderColor: "var(--color-hairline)" }}
           >
-            <span
-              className="text-xs uppercase tracking-widest"
-              style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
-            >
-              lecture deck (pdf)
-            </span>
+            <span className="text-sm font-medium">Lecture deck</span>
             <div className="flex gap-4">
               <a
                 href={pdfUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="focus-ring rounded text-xs"
-                style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
+                className="focus-ring rounded text-sm"
+                style={{ color: "var(--color-accent)" }}
               >
-                open in new tab ↗
+                Open in new tab
               </a>
               <a
                 href={pdfUrl}
                 download
-                className="focus-ring rounded text-xs"
-                style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-muted)" }}
+                className="focus-ring rounded text-sm"
+                style={{ color: "var(--color-text-muted)" }}
               >
-                download
+                Download
               </a>
             </div>
           </div>
@@ -47,13 +42,13 @@ export default function SlidesView({ slides, pdfUrl }: { slides: SlideRef[]; pdf
             src={pdfUrl}
             title="Lecture slides PDF"
             className="w-full"
-            style={{ height: "70vh", border: "none", background: "var(--color-ink-soft)" }}
+            style={{ height: "70vh", border: "none", background: "var(--color-surface-2)" }}
           />
         </div>
       )}
 
       {slides.length > 0 && (
-        <ol className="space-y-3">
+        <ol className="space-y-2.5">
           {slides.map((s, i) => (
             <li
               key={i}
@@ -61,21 +56,21 @@ export default function SlidesView({ slides, pdfUrl }: { slides: SlideRef[]; pdf
               style={{ borderColor: "var(--color-hairline)", background: "var(--color-surface)" }}
             >
               <div className="flex items-baseline justify-between gap-4">
-                <span className="font-[var(--font-display)] font-medium">{s.label}</span>
+                <span className="font-medium">{s.label}</span>
                 {s.url && (
                   <a
                     href={s.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs focus-ring rounded"
-                    style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
+                    className="text-sm focus-ring rounded shrink-0"
+                    style={{ color: "var(--color-accent)" }}
                   >
-                    open deck →
+                    Open deck →
                   </a>
                 )}
               </div>
               {s.note && (
-                <p className="text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
+                <p className="text-sm mt-1.5" style={{ color: "var(--color-text-muted)" }}>
                   {s.note}
                 </p>
               )}

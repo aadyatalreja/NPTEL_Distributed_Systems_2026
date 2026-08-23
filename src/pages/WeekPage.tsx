@@ -27,8 +27,8 @@ export default function WeekPage() {
       <Shell>
         <p style={{ color: "var(--color-text-muted)" }}>
           No such week.{" "}
-          <Link to="/" className="focus-ring rounded" style={{ color: "var(--color-signal)" }}>
-            Back to map
+          <Link to="/" className="focus-ring rounded" style={{ color: "var(--color-accent)" }}>
+            Back to overview
           </Link>
         </p>
       </Shell>
@@ -37,22 +37,30 @@ export default function WeekPage() {
 
   return (
     <Shell>
+      <Link
+        to="/"
+        className="focus-ring inline-flex items-center gap-1.5 text-sm mb-8 rounded"
+        style={{ color: "var(--color-text-muted)" }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        All weeks
+      </Link>
+
       <div className="mb-8">
         <TopologyMap weeks={weeks} activeWeek={week.week} />
       </div>
 
       <div className="mb-8">
-        <p
-          className="text-xs uppercase tracking-[0.2em] mb-2"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
-        >
-          week {String(week.week).padStart(2, "0")}
+        <p className="text-sm mb-1.5" style={{ color: "var(--color-text-muted)" }}>
+          Week {String(week.week).padStart(2, "0")}
         </p>
-        <h1 className="font-[var(--font-display)] font-semibold text-3xl">{week.title}</h1>
+        <h1 className="font-semibold text-2xl md:text-3xl tracking-tight">{week.title}</h1>
       </div>
 
       <div
-        className="flex gap-1 mb-8 border-b"
+        className="flex gap-6 mb-8 border-b"
         style={{ borderColor: "var(--color-hairline)" }}
         role="tablist"
       >
@@ -72,18 +80,15 @@ export default function WeekPage() {
               role="tab"
               aria-selected={active}
               onClick={() => setTab(t.id)}
-              className="focus-ring px-4 py-2.5 text-sm font-[var(--font-display)] font-medium relative -mb-px"
+              className="focus-ring pb-3 text-sm font-medium relative -mb-px transition-colors"
               style={{
                 color: active ? "var(--color-text)" : "var(--color-text-faint)",
-                borderBottom: active ? "2px solid var(--color-signal)" : "2px solid transparent",
+                borderBottom: active ? "2px solid var(--color-accent)" : "2px solid transparent",
               }}
             >
               {t.label}
               {count > 0 && (
-                <span
-                  className="ml-1.5 text-xs"
-                  style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
-                >
+                <span className="ml-1.5 text-xs" style={{ color: "var(--color-text-faint)" }}>
                   {count}
                 </span>
               )}

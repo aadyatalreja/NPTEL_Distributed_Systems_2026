@@ -6,97 +6,55 @@ interface Props {
   activeWeek?: number;
 }
 
-// Lays 8 week-nodes out on a gentle arc, connected by edges — a cluster
-// topology diagram doubling as the course's progress tracker. A node is
-// "replicated" (filled, quorum-green ring) once its week has content.
+// A plain, linear progress track: one step per week, in order, with the
+// current week's position always obvious. Replaces the old decorative
+// cluster diagram with something you can actually scan while studying.
 export default function TopologyMap({ weeks, activeWeek }: Props) {
   const navigate = useNavigate();
-  const n = weeks.length;
-  const width = 900;
-  const height = 220;
-  const radius = 340;
-  const cx = width / 2;
-  const cy = -140;
-
-  const points = weeks.map((_, i) => {
-    const spread = 0.62; // radians of arc used
-    const angle = Math.PI / 2 - spread / 2 + (spread * i) / (n - 1);
-    const x = cx + radius * Math.cos(angle);
-    const y = cy + radius * Math.sin(angle);
-    return { x, y };
-  });
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-auto overflow-visible"
-      role="img"
-      aria-label="Course progress topology: 8 weekly nodes"
+    <div
+      role="list"
+      aria-label="Week progress"
+      className="flex items-stretch gap-1.5 overflow-x-auto pb-1 -mx-1 px-1"
     >
-      {points.slice(0, -1).map((p, i) => {
-        const next = points[i + 1];
-        const bothReady = weeks[i].status !== "empty" && weeks[i + 1].status !== "empty";
-        return (
-          <line
-            key={`edge-${i}`}
-            x1={p.x}
-            y1={p.y}
-            x2={next.x}
-            y2={next.y}
-            stroke={bothReady ? "var(--color-signal-dim)" : "var(--color-hairline)"}
-            strokeWidth={1.5}
-            strokeDasharray={bothReady ? undefined : "4 5"}
-          />
-        );
-      })}
-
-      {points.map((p, i) => {
-        const w = weeks[i];
+      {weeks.map((w) => {
         const isActive = activeWeek === w.week;
-        const filled = w.status !== "empty";
+        const ready = w.status === "ready";
+        const inProgress = w.status === "in-progress";
+
+        const dotColor = ready
+          ? "var(--color-success)"
+          : inProgress
+          ? "var(--color-warning)"
+          : "var(--color-hairline-lit)";
+
         return (
-          <g
+          <button
             key={w.week}
-            transform={`translate(${p.x}, ${p.y})`}
-            className="cursor-pointer focus-ring"
-            tabIndex={0}
-            role="button"
-            aria-label={`Week ${w.week}: ${w.title}, ${w.status}`}
+            role="listitem"
             onClick={() => navigate(`/week/${w.week}`)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") navigate(`/week/${w.week}`);
+            className="focus-ring shrink-0 flex flex-col items-center gap-1.5 rounded-md px-2.5 py-2 min-w-[52px] transition-colors"
+            style={{
+              background: isActive ? "var(--color-accent-soft)" : "transparent",
+              border: `1px solid ${isActive ? "var(--color-accent)" : "transparent"}`,
             }}
+            aria-current={isActive ? "true" : undefined}
+            aria-label={`Week ${w.week}: ${w.title} — ${w.status}`}
           >
-            {isActive && (
-              <circle r={20} fill="none" stroke="var(--color-signal)" strokeWidth={1.5} opacity={0.5} />
-            )}
-            <circle
-              r={14}
-              fill={filled ? "var(--color-surface-2)" : "var(--color-ink-soft)"}
-              stroke={filled ? "var(--color-quorum)" : "var(--color-hairline-lit)"}
-              strokeWidth={filled ? 2 : 1.5}
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: dotColor }}
             />
-            <text
-              textAnchor="middle"
-              dy="0.35em"
-              fontFamily="var(--font-mono)"
-              fontSize="11"
-              fill={filled ? "var(--color-text)" : "var(--color-text-faint)"}
+            <span
+              className="text-xs font-medium tabular-nums"
+              style={{ color: isActive ? "var(--color-text)" : "var(--color-text-faint)" }}
             >
               {w.week}
-            </text>
-            <text
-              textAnchor="middle"
-              y={34}
-              fontFamily="var(--font-display)"
-              fontSize="11"
-              fill="var(--color-text-muted)"
-            >
-              W{w.week}
-            </text>
-          </g>
+            </span>
+          </button>
         );
       })}
-    </svg>
+    </div>
   );
 }

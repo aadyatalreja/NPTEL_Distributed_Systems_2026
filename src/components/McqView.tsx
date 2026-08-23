@@ -27,33 +27,30 @@ export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
         className="flex items-center justify-between mb-6 rounded-lg border px-5 py-3"
         style={{ borderColor: "var(--color-hairline)", background: "var(--color-surface)" }}
       >
-        <span
-          className="text-sm"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-muted)" }}
-        >
-          score: <span style={{ color: "var(--color-quorum)" }}>{correctCount}</span>
-          {" / "}
-          {answeredCount} answered &middot; {mcqs.length} total
+        <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+          <span style={{ color: "var(--color-success)", fontWeight: 600 }}>{correctCount}</span>
+          {" correct · "}
+          {answeredCount} answered · {mcqs.length} total
         </span>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={() => setShuffleSeed((s) => s + 1)}
-            className="text-xs focus-ring rounded"
-            style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
+            className="text-sm focus-ring rounded"
+            style={{ color: "var(--color-accent)" }}
           >
-            shuffle
+            Shuffle
           </button>
           <button
             onClick={reset}
-            className="text-xs focus-ring rounded"
-            style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
+            className="text-sm focus-ring rounded"
+            style={{ color: "var(--color-text-faint)" }}
           >
-            reset
+            Reset
           </button>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         {ordered.map((q, i) => (
           <McqCard
             key={q.id}
@@ -87,11 +84,8 @@ function McqCard({
       style={{ borderColor: "var(--color-hairline)", background: "var(--color-surface)" }}
     >
       <div className="flex items-start gap-3 mb-4">
-        <span
-          className="text-xs mt-1 shrink-0"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
-        >
-          Q{index}
+        <span className="text-sm mt-0.5 shrink-0" style={{ color: "var(--color-text-faint)" }}>
+          {index}.
         </span>
         <p className="font-medium leading-snug">{mcq.question}</p>
       </div>
@@ -103,11 +97,11 @@ function McqCard({
           let border = "var(--color-hairline)";
           let bg = "transparent";
           if (answered && isCorrect) {
-            border = "var(--color-quorum)";
-            bg = "color-mix(in srgb, var(--color-quorum) 12%, transparent)";
+            border = "var(--color-success)";
+            bg = "color-mix(in srgb, var(--color-success) 10%, transparent)";
           } else if (answered && isSelected && !isCorrect) {
-            border = "var(--color-partition)";
-            bg = "color-mix(in srgb, var(--color-partition) 12%, transparent)";
+            border = "var(--color-danger)";
+            bg = "color-mix(in srgb, var(--color-danger) 10%, transparent)";
           }
           return (
             <button
@@ -117,10 +111,7 @@ function McqCard({
               className="focus-ring w-full text-left rounded-md border px-4 py-2.5 text-sm transition-colors disabled:cursor-default"
               style={{ borderColor: border, background: bg }}
             >
-              <span
-                className="inline-block w-5"
-                style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
-              >
+              <span className="inline-block w-5" style={{ color: "var(--color-text-faint)" }}>
                 {String.fromCharCode(65 + idx)}
               </span>
               {opt}
@@ -133,10 +124,10 @@ function McqCard({
         <div
           className="mt-4 rounded-md px-4 py-3 text-sm leading-relaxed"
           style={{
-            background: "var(--color-ink-soft)",
+            background: "var(--color-surface-2)",
             color: "var(--color-text-muted)",
             borderLeft: `2px solid ${
-              selected === mcq.correctIndex ? "var(--color-quorum)" : "var(--color-partition)"
+              selected === mcq.correctIndex ? "var(--color-success)" : "var(--color-danger)"
             }`,
           }}
         >

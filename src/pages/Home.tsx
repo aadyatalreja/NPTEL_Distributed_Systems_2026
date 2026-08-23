@@ -8,49 +8,45 @@ export default function Home() {
 
   return (
     <Shell>
-      <div className="mb-12">
+      <div className="mb-10">
         <p
-          className="text-xs uppercase tracking-[0.2em] mb-3"
-          style={{ fontFamily: "var(--font-mono)", color: "var(--color-signal)" }}
+          className="text-sm mb-3"
+          style={{ color: "var(--color-text-muted)" }}
         >
-          cluster status &middot; {readyCount}/8 nodes replicated
+          {readyCount} of {weeks.length} weeks available
         </p>
-        <h1
-          className="font-[var(--font-display)] font-semibold text-4xl md:text-5xl leading-tight mb-4"
-        >
-          Distributed Systems,<br />one week at a time.
+        <h1 className="font-semibold text-3xl md:text-4xl leading-tight mb-4 tracking-tight">
+          Distributed Systems, one week at a time.
         </h1>
         <p className="text-[var(--color-text-muted)] max-w-xl leading-relaxed">
-          Summary notes, slide references, MCQs with worked solutions, and flashcard
-          recall drills — built up week by week as the course goes.
+          Summary notes, slide references, MCQs with worked solutions, and
+          flashcard recall drills — built up week by week as the course
+          goes.
         </p>
       </div>
 
-      <div className="mb-14 py-6">
+      <div className="mb-10">
         <TopologyMap weeks={weeks} />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="border-t" style={{ borderColor: "var(--color-hairline)" }}>
         {weeks.map((w) => (
           <Link
             key={w.week}
             to={`/week/${w.week}`}
-            className="focus-ring group flex items-center justify-between rounded-lg border px-5 py-4 transition-colors"
-            style={{
-              borderColor: "var(--color-hairline)",
-              background: "var(--color-surface)",
-            }}
+            className="focus-ring group flex items-center justify-between gap-4 py-4 border-b transition-colors hover:bg-[var(--color-surface-2)] px-2 -mx-2 rounded-md"
+            style={{ borderColor: "var(--color-hairline)" }}
           >
-            <div>
-              <div
-                className="text-xs mb-1"
-                style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
+            <div className="flex items-baseline gap-4 min-w-0">
+              <span
+                className="text-sm tabular-nums shrink-0"
+                style={{ color: "var(--color-text-faint)" }}
               >
-                node {String(w.week).padStart(2, "0")}
-              </div>
-              <div className="font-[var(--font-display)] font-medium">{w.title}</div>
+                {String(w.week).padStart(2, "0")}
+              </span>
+              <span className="font-medium truncate">{w.title}</span>
             </div>
-            <StatusDot status={w.status} />
+            <StatusTag status={w.status} />
           </Link>
         ))}
       </div>
@@ -58,20 +54,20 @@ export default function Home() {
   );
 }
 
-function StatusDot({ status }: { status: string }) {
+function StatusTag({ status }: { status: string }) {
   const color =
     status === "ready"
-      ? "var(--color-quorum)"
+      ? "var(--color-success)"
       : status === "in-progress"
-      ? "var(--color-amber)"
-      : "var(--color-hairline-lit)";
-  const label = status === "ready" ? "ready" : status === "in-progress" ? "building" : "empty";
+      ? "var(--color-warning)"
+      : "var(--color-text-faint)";
+  const label = status === "ready" ? "Ready" : status === "in-progress" ? "In progress" : "Empty";
   return (
     <span
-      className="text-xs flex items-center gap-2"
-      style={{ fontFamily: "var(--font-mono)", color: "var(--color-text-faint)" }}
+      className="text-xs shrink-0 flex items-center gap-1.5"
+      style={{ color: "var(--color-text-faint)" }}
     >
-      <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
       {label}
     </span>
   );
