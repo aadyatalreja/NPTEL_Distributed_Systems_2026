@@ -78,13 +78,3 @@ topology map.
 npm install
 npm run dev
 ```
-
-## Deploying to Vercel
-
-1. Push this folder to a GitHub repo.
-2. Go to vercel.com → New Project → import the repo.
-3. Framework preset: Vite. Build command: `npm run build`. Output dir: `dist`.
-   (`vercel.json` is already set up to handle client-side routing.)
-4. Deploy. Every push to `main` auto-redeploys.
-
-Or from the CLI: `npx vercel --prod` from this directory.
