@@ -38,7 +38,7 @@ src/
     WeekPage.tsx       # tabs: Notes / Slides / MCQs / Flashcards
 ```
 
-## Adding a week's content
+## Adding a Week's Content
 
 Open `src/data/weeks/weekN.ts` and fill in the `WeekData` object:
 
@@ -72,7 +72,7 @@ Then register it in `src/data/weeks/index.ts` in place of the `emptyWeek(2, ...)
 placeholder. Setting `status: "ready"` lights up that node green on the
 topology map.
 
-## Local development
+## Local Development
 
 ```bash
 npm install
