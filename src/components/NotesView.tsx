@@ -3,12 +3,12 @@ import remarkGfm from "remark-gfm";
 import type { CSSProperties } from "react";
 import type { NoteSection } from "../types";
 
-// Maps a heading or MCQ/flashcard topic tag (e.g. "L2", "L2 — The
-// message-passing model...") to its lecture accent colour, so cards read
+// Maps a heading or MCQ/flashcard topic tag (e.g. "Unit 2", "Unit 2 —
+// Message Passing Systems") to that unit's accent colour, so cards read
 // as belonging to a topic at a glance. Falls back to the neutral accent
 // for anything unrecognised or unset.
 export function topicTint(label?: string): string {
-  const match = label?.match(/L([1-4])/);
+  const match = label?.match(/Unit\s*([1-4])/i);
   if (match) return `var(--color-topic-l${match[1]})`;
   return "var(--color-accent)";
 }
