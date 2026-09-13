@@ -99,7 +99,7 @@ export default function WeekPage() {
 
       <div>
         {tab === "notes" && (
-          <div className="max-w-[68ch]">
+          <div className="max-w-[85ch]">
             <NotesView notes={week.notes} />
           </div>
         )}

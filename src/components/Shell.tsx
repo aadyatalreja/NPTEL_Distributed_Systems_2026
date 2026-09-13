@@ -15,7 +15,7 @@ export default function Shell({ children }: { children: ReactNode }) {
         className="sticky top-0 z-10 border-b backdrop-blur"
         style={{ borderColor: "var(--color-hairline)", background: "color-mix(in srgb, var(--color-bg) 88%, transparent)" }}
       >
-        <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="focus-ring rounded font-semibold tracking-tight text-[15px]">
             Distributed Systems
           </Link>
@@ -31,11 +31,11 @@ export default function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-12">{children}</main>
+      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-12">{children}</main>
 
       <footer className="border-t" style={{ borderColor: "var(--color-hairline)" }}>
         <div
-          className="max-w-3xl mx-auto px-6 py-5 text-xs space-y-1"
+          className="max-w-5xl mx-auto px-6 py-5 text-xs space-y-1"
           style={{ color: "var(--color-text-faint)" }}
         >
           <p>
