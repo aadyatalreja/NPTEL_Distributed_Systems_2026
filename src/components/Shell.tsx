@@ -5,6 +5,12 @@ import ThemeToggle from "./ThemeToggle";
 export default function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
+      <div className="bg-blobs" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
       <header
         className="sticky top-0 z-10 border-b backdrop-blur"
         style={{ borderColor: "var(--color-hairline)", background: "color-mix(in srgb, var(--color-bg) 88%, transparent)" }}

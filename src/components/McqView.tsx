@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import type { Mcq } from "../types";
-import { EmptyState } from "./NotesView";
+import { EmptyState, topicTint } from "./NotesView";
 
 export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -24,8 +25,8 @@ export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
   return (
     <div>
       <div
-        className="flex items-center justify-between mb-6 rounded-lg border px-5 py-3"
-        style={{ borderColor: "var(--color-hairline)", background: "var(--color-surface)" }}
+        className="glass-card flex items-center justify-between mb-6 px-5 py-3"
+        style={{ "--card-tint": "var(--color-accent)" } as CSSProperties}
       >
         <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
           <span style={{ color: "var(--color-success)", fontWeight: 600 }}>{correctCount}</span>
@@ -77,15 +78,19 @@ function McqCard({
   onSelect: (idx: number) => void;
 }) {
   const answered = selected !== undefined;
+  const tint = topicTint(mcq.topic);
 
   return (
-    <div
-      className="rounded-lg border px-5 py-5"
-      style={{ borderColor: "var(--color-hairline)", background: "var(--color-surface)" }}
-    >
+    <div className="glass-card px-5 py-5" style={{ "--card-tint": tint } as CSSProperties}>
       <div className="flex items-start gap-3 mb-4">
-        <span className="text-sm mt-0.5 shrink-0" style={{ color: "var(--color-text-faint)" }}>
-          {index}.
+        <span
+          className="text-xs font-semibold mt-1 shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+          style={{
+            color: tint,
+            background: `color-mix(in srgb, ${tint} 14%, transparent)`,
+          }}
+        >
+          {index}
         </span>
         <p className="font-medium leading-snug">{mcq.question}</p>
       </div>
