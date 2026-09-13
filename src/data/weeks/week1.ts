@@ -104,7 +104,8 @@ Comparison: vh ≤ vk iff every component ≤; vh < vk iff ≤ and strictly less
     },
     {
       heading: "⭐ Important topics — exam priority list",
-      body: `**Tier 1 — must know:**
+      body: `#### Tier 1 — must know
+
 1. Definition and characteristics of distributed systems
 2. Motivation / advantages of going distributed
 3. Transparency — all 7 types (access, location, migration, relocation, replication, concurrency, failure)
@@ -130,10 +131,10 @@ Comparison: vh ≤ vk iff every component ≤; vh < vk iff ≤ and strictly less
 23. Scalar (Lamport) clocks — rules R1/R2, and why they aren't strongly consistent
 24. Vector clocks — rules, isomorphism property, strong consistency
 
-**⭐ Complexities to memorize:**
+#### Complexities to memorize
 
 | Algorithm | Message complexity | Time complexity |
-|---|---|---|
+| --- | --- | --- |
 | Broadcast | n − 1 | O(d) |
 | Convergecast | based on tree edges | O(d) |
 | Rooted spanning tree (known root) | O(m) | O(diam) |
@@ -143,10 +144,11 @@ Comparison: vh ≤ vk iff every component ≤; vh < vk iff ≤ and strictly less
 | Hirschberg–Sinclair | O(n log n) | — |
 | Async leader-election lower bound | Ω(n log n) | — |
 
-**Suggested study order if time is short:**
+#### Suggested study order if time is short
+
 LCR + HS → synchronous vs. asynchronous → spanning trees (BFS vs. DFS) → happens-before / causality → Lamport (scalar) clocks → the 7 transparencies → message-passing model → distributed-systems basics.
 
-**What NPTEL is most likely to test:** algorithm *execution and complexity* over rote definitions — tracing LCR/HS by hand, identifying BFS vs. DFS outcomes, reading happens-before diagrams, spotting concurrent events, computing Lamport timestamps, and distinguishing FIFO/causal ordering.`,
+> **What NPTEL is most likely to test:** algorithm *execution and complexity* over rote definitions — tracing LCR/HS by hand, identifying BFS vs. DFS outcomes, reading happens-before diagrams, spotting concurrent events, computing Lamport timestamps, and distinguishing FIFO/causal ordering.`,
     },
   ],
 

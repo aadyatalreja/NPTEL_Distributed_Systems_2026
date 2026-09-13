@@ -25,6 +25,17 @@
   --color-success:     #2F8F5B;
   --color-warning:     #B5811F;
   --color-danger:      #C6413E;
+
+  /* Per-lecture accent hues — used to color-code note cards and
+     complement the primary accent without competing with it. */
+  --color-topic-l1: #3454D1;  /* intro — blue, same family as the accent */
+  --color-topic-l2: #0E8F82;  /* message passing — teal */
+  --color-topic-l3: #7C4FE0;  /* leader election — violet */
+  --color-topic-l4: #BD6A16;  /* causality/time — amber */
+
+  --glass-bg:     color-mix(in srgb, #FFFFFF 62%, transparent);
+  --glass-border: color-mix(in srgb, #FFFFFF 55%, var(--color-hairline-lit));
+  --glass-shadow: 0 1px 2px rgba(28, 28, 26, 0.04), 0 12px 32px -12px rgba(28, 28, 26, 0.14);
 }
 
 /* --- Dark theme --- */
@@ -44,6 +55,15 @@
   --color-success:     #4FC787;
   --color-warning:     #E0AA55;
   --color-danger:      #E5726B;
+
+  --color-topic-l1: #8AA0FF;
+  --color-topic-l2: #4FD6C5;
+  --color-topic-l3: #B69CFF;
+  --color-topic-l4: #F0B860;
+
+  --glass-bg:     color-mix(in srgb, #1D1E22 55%, transparent);
+  --glass-border: color-mix(in srgb, #FFFFFF 10%, var(--color-hairline-lit));
+  --glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 16px 40px -16px rgba(0, 0, 0, 0.55);
 }
 
 html, body, #root {
@@ -81,6 +101,73 @@ body {
   border-radius: 4px;
 }
 
+/* --- Ambient background — soft, fixed colour blobs the glass panels
+   sit above. Static (no motion) so it reads as a considered backdrop
+   rather than decoration competing with the reading content. --- */
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-blobs span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.16;
+}
+[data-theme="dark"] .bg-blobs span {
+  opacity: 0.22;
+}
+.bg-blobs span:nth-child(1) {
+  top: -12%;
+  left: 6%;
+  width: 32rem;
+  height: 32rem;
+  background: var(--color-topic-l1);
+}
+.bg-blobs span:nth-child(2) {
+  top: 18%;
+  right: -10%;
+  width: 26rem;
+  height: 26rem;
+  background: var(--color-topic-l4);
+}
+.bg-blobs span:nth-child(3) {
+  bottom: -14%;
+  left: 28%;
+  width: 30rem;
+  height: 30rem;
+  background: var(--color-topic-l3);
+}
+
+/* --- Glass panel — the shared frosted-glass surface for cards. Tint
+   the border/glow per section with --card-tint; falls back to the
+   neutral hairline when unset. --- */
+.glass-card {
+  --card-tint: var(--color-hairline-lit);
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
+}
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--card-tint) 55%, transparent), transparent 45%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
 /* Reading typography for note prose — deliberately serif, generous
    line-height, and a comfortable measure so study sessions are easy
    on the eyes. */
@@ -112,4 +199,80 @@ body {
   border: 1px solid var(--color-hairline);
   border-radius: 4px;
   padding: 0.1em 0.4em;
+}
+.prose-notes h1, .prose-notes h2, .prose-notes h3, .prose-notes h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  margin-top: 1.6em;
+  margin-bottom: 0.7em;
+}
+.prose-notes h1 { font-size: 1.25em; }
+.prose-notes h2 { font-size: 1.15em; }
+.prose-notes h3 { font-size: 1.05em; }
+.prose-notes h4 {
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+.prose-notes > :first-child { margin-top: 0; }
+.prose-notes hr {
+  border: none;
+  border-top: 1px solid var(--color-hairline);
+  margin: 1.6em 0;
+}
+.prose-notes blockquote {
+  margin: 1.15em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+.prose-notes a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Markdown tables (complexity charts, comparisons) — a clean, readable
+   grid that sits comfortably inside the serif reading column. */
+.prose-notes table {
+  width: 100%;
+  margin: 1.3em 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-hairline);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 0.85em;
+}
+.prose-notes thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  padding: 0.7em 1em;
+  border-bottom: 1px solid var(--color-hairline);
+}
+.prose-notes tbody td {
+  padding: 0.65em 1em;
+  border-bottom: 1px solid var(--color-hairline);
+  color: var(--color-text);
+}
+.prose-notes tbody tr:last-child td {
+  border-bottom: none;
+}
+.prose-notes tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--color-surface-2) 55%, transparent);
+}
+.prose-notes td:not(:first-child),
+.prose-notes th:not(:first-child) {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
 }
