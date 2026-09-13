@@ -102,6 +102,52 @@ Satisfies consistency (monotonic) but is **not strongly consistent** — C(ei)<C
 
 Comparison: vh ≤ vk iff every component ≤; vh < vk iff ≤ and strictly less somewhere; concurrent (vh ∥ vk) iff neither dominates. **Isomorphism property:** x→y ⇔ vh<vk and x∥y ⇔ vh∥vk — vector clocks are **strongly consistent**, so you can read causality directly off two timestamps. This requires dimension ≥ n (Charron-Bost). With d=1, component *i* of pi's vector counts pi's own events, and Σ vh[j] − 1 counts all events that causally precede that event system-wide.`,
     },
+    {
+      heading: "⭐ Important topics — exam priority list",
+      body: `**Tier 1 — must know:**
+1. Definition and characteristics of distributed systems
+2. Motivation / advantages of going distributed
+3. Transparency — all 7 types (access, location, migration, relocation, replication, concurrency, failure)
+4. System-level design challenges (communication, process management, synchronization, fault tolerance)
+5. Synchronous vs. asynchronous message-passing systems
+6. The message-passing model (configuration, deliver/computation events, execution)
+7. Broadcast over a rooted spanning tree
+8. Convergecast
+9. Spanning-tree construction: known root (BFS-style flood)
+10. BFS vs. DFS spanning trees, and why async execution isn't guaranteed BFS
+11. The leader-election problem statement
+12. The anonymous-ring impossibility theorem (symmetry-breaking argument)
+13. **LCR algorithm** — mechanics and Θ(n²) worst case
+14. **Hirschberg–Sinclair algorithm** — phased doubling and O(n log n)
+15. LCR vs. HS complexity comparison
+16. The Ω(n log n) leader-election lower bound for asynchronous rings
+17. The distributed execution model — internal/send/receive events
+18. Space-time diagrams
+19. The happens-before relation and causality
+20. Concurrent events (logical vs. physical concurrency)
+21. FIFO vs. non-FIFO vs. causal-ordering channel models
+22. Logical clocks — the general consistency framework
+23. Scalar (Lamport) clocks — rules R1/R2, and why they aren't strongly consistent
+24. Vector clocks — rules, isomorphism property, strong consistency
+
+**⭐ Complexities to memorize:**
+
+| Algorithm | Message complexity | Time complexity |
+|---|---|---|
+| Broadcast | n − 1 | O(d) |
+| Convergecast | based on tree edges | O(d) |
+| Rooted spanning tree (known root) | O(m) | O(diam) |
+| DFS spanning tree (known root) | O(m) | O(m) |
+| Spanning tree without root | O(nm) | O(m) |
+| LCR leader election | Θ(n²) worst case | O(n) |
+| Hirschberg–Sinclair | O(n log n) | — |
+| Async leader-election lower bound | Ω(n log n) | — |
+
+**Suggested study order if time is short:**
+LCR + HS → synchronous vs. asynchronous → spanning trees (BFS vs. DFS) → happens-before / causality → Lamport (scalar) clocks → the 7 transparencies → message-passing model → distributed-systems basics.
+
+**What NPTEL is most likely to test:** algorithm *execution and complexity* over rote definitions — tracing LCR/HS by hand, identifying BFS vs. DFS outcomes, reading happens-before diagrams, spotting concurrent events, computing Lamport timestamps, and distinguishing FIFO/causal ordering.`,
+    },
   ],
 
   slides: [
@@ -607,6 +653,356 @@ Comparison: vh ≤ vk iff every component ≤; vh < vk iff ≤ and strictly less
       ],
       correctIndex: 0,
       explanation: "When the process of each event is known, comparing full vectors isn't necessary: x → y holds exactly when vh[i] ≤ vk[i] — that is, pj's recorded knowledge of pi's clock (at the i-th component) has caught up to or passed x's own timestamp.",
+      topic: "L4",
+    },
+    {
+      id: "w1-q41",
+      question: "Which of the following is NOT a characteristic of a distributed system?",
+      options: ["Heterogeneity", "Concurrency", "A common global clock", "Interdependencies"],
+      correctIndex: 2,
+      explanation: "Distributed systems have no common global clock — every processor keeps only a local notion of time. Heterogeneity, concurrency, and interdependencies are all genuine characteristics.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q42",
+      question: "In a distributed system, middleware primarily provides:",
+      options: [
+        "Physical synchronization of processors",
+        "Transparency of heterogeneity at the platform level",
+        "Replacement of the operating system",
+        "Shared physical memory",
+      ],
+      correctIndex: 1,
+      explanation: "Middleware is the distributed software layer sitting above the OS and network stack that hides differences between machines and provides transparency — it does not replace the OS or create shared memory.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q43",
+      question: "Which of the following best explains why distributed systems do not require a common global clock?",
+      options: [
+        "Every process executes sequentially",
+        "Processes have independent local notions of time",
+        "All messages arrive simultaneously",
+        "Processors share a common memory",
+      ],
+      correctIndex: 1,
+      explanation: "Each processor in a distributed system maintains its own local clock rather than sharing one global clock, since there's no shared memory or synchronized hardware clock across machines.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q44",
+      question: "Which of the following is an example of location transparency?",
+      options: [
+        "A user accesses a replicated file without knowing there are multiple copies",
+        "A user accesses a resource without knowing where it is physically located",
+        "A resource moves while preserving its name",
+        "A user is unaware that another process is accessing the resource",
+      ],
+      correctIndex: 1,
+      explanation: "Location transparency means the user doesn't need to know a resource's physical location to access it. The other options describe replication, migration, and concurrency transparency respectively.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q45",
+      question: "Which transparency hides the existence of multiple copies of a resource?",
+      options: ["Access transparency", "Location transparency", "Replication transparency", "Failure transparency"],
+      correctIndex: 2,
+      explanation: "Replication transparency specifically hides from the user that a resource has multiple copies.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q46",
+      question: "Which of the following is primarily a communication complexity measure in distributed algorithms?",
+      options: ["Number of CPU registers", "Number of messages exchanged", "Number of instructions in one processor", "Size of local cache"],
+      correctIndex: 1,
+      explanation: "Communication complexity in distributed algorithms is measured chiefly by the number (and size) of messages exchanged, unlike single-processor algorithms which focus on time/space complexity.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q47",
+      question: "Which combination represents the three fundamental difficulties in designing distributed algorithms?",
+      options: [
+        "Memory, CPU, storage",
+        "Asynchrony, limited knowledge, failures",
+        "Encryption, compression, routing",
+        "Scalability, virtualization, caching",
+      ],
+      correctIndex: 1,
+      explanation: "The three fundamental difficulties are asynchrony (no precise timing guarantees), limited local knowledge (no global view), and independent failures.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q48",
+      question: "A distributed system has no global state visible to every processor because:",
+      options: [
+        "Each processor has complete information about all other processors",
+        "Processors only have local views and communicate through messages",
+        "All processors execute at exactly the same speed",
+        "There is no communication between processors",
+      ],
+      correctIndex: 1,
+      explanation: "Since every processor only knows what it has locally received via messages, no single processor ever has a complete, instantaneous global view of the system.",
+      topic: "L1",
+    },
+    {
+      id: "w1-q49",
+      question: "In the basic message-passing model, which of the following is NOT one of the three types of events at a process?",
+      options: ["Internal event", "Send event", "Receive event", "Synchronization event"],
+      correctIndex: 3,
+      explanation: "The three event types are internal, send, and receive events. 'Synchronization event' is not a separate category in this model.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q50",
+      question: "Consider a message m sent from process P1 to P2. Which causal relationship necessarily holds?",
+      options: ["receive(m) → send(m)", "send(m) → receive(m)", "send(m) ∥ receive(m)", "Neither event is related"],
+      correctIndex: 1,
+      explanation: "By definition of the happens-before relation, a message must be sent before it can be received, so send(m) → receive(m) always holds.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q51",
+      question: "In a synchronous message-passing system, time is generally measured in terms of:",
+      options: ["Number of messages", "Number of processors", "Number of rounds", "Number of channels"],
+      correctIndex: 2,
+      explanation: "Synchronous systems execute in lockstep rounds (send, deliver, compute), so time complexity is expressed as a number of rounds.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q52",
+      question: "Which statement is TRUE for an asynchronous message-passing system?",
+      options: [
+        "Every message has a known fixed delivery time",
+        "All processors operate in lockstep",
+        "Message delays can be arbitrary, subject to eventual delivery in the model",
+        "Every processor executes at exactly the same speed",
+      ],
+      correctIndex: 2,
+      explanation: "Asynchronous systems place no fixed upper bound on message delay or on the time between a processor's steps — delays can be arbitrarily long, though (for admissible executions) messages are still eventually delivered.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q53",
+      question: "A rooted spanning tree contains:",
+      options: ["Only the root and its immediate neighbors", "All processors and a designated root", "All communication links", "Exactly one cycle"],
+      correctIndex: 1,
+      explanation: "A rooted spanning tree is a spanning tree (connected, acyclic, touching every processor) with one designated root node.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q54",
+      question: "Broadcast over a rooted spanning tree is best described as:",
+      options: [
+        "Many processors sending information toward the root",
+        "Root information propagating toward all processors",
+        "Processors electing a leader",
+        "Processors detecting failures",
+      ],
+      correctIndex: 1,
+      explanation: "Broadcast sends information from the root outward to every processor via the spanning tree — the opposite direction of convergecast.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q55",
+      question: "In a rooted spanning tree containing n processors, how many messages are required for broadcast if exactly one message is sent over every tree edge?",
+      options: ["n", "n + 1", "n − 1", "2n"],
+      correctIndex: 2,
+      explanation: "A spanning tree over n nodes has exactly n − 1 edges, and broadcast sends one message per edge, giving n − 1 messages total.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q56",
+      question: "Convergecast is essentially the reverse of:",
+      options: ["Leader election", "Broadcast", "DFS", "Logical clock synchronization"],
+      correctIndex: 1,
+      explanation: "Convergecast collects information from all processors toward the root — the mirror image of broadcast, which sends information from the root outward.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q57",
+      question: "During convergecast, a non-leaf node generally:",
+      options: [
+        "Immediately sends its own information to every neighbor",
+        "Waits for information from its children and aggregates it",
+        "Becomes the leader",
+        "Discards information received from children",
+      ],
+      correctIndex: 1,
+      explanation: "A non-leaf (internal) node must wait until it has heard from all of its children before combining that information with its own and forwarding it up to its parent.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q58",
+      question: "In the spanning-tree algorithm with a known root, when a non-root processor receives the exploration message for the FIRST time, it:",
+      options: ["Rejects the message", "Becomes the leader", "Sets the sender as its parent", "Terminates immediately"],
+      correctIndex: 2,
+      explanation: "The first time a processor receives the exploration message M, it sets the sender as its parent and replies accordingly, then forwards M onward. Any later receipt of M gets a 'reject' reply.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q59",
+      question: "In the lecture, a spanning tree constructed in a synchronous system using the basic exploration algorithm is:",
+      options: ["Always a DFS tree", "Always a BFS tree", "Always a minimum spanning tree", "Neither BFS nor DFS"],
+      correctIndex: 1,
+      explanation: "Because synchronous execution delivers messages in lockstep rounds, nodes are discovered in strict distance order from the root, guaranteeing a BFS tree.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q60",
+      question: "Why does the same basic spanning-tree algorithm NOT necessarily produce a BFS tree asynchronously?",
+      options: [
+        "Processors cannot communicate",
+        "Different message delays can affect the order in which nodes are discovered",
+        "There is no root",
+        "Nodes have no identifiers",
+      ],
+      correctIndex: 1,
+      explanation: "Without the lockstep timing guarantee of the synchronous model, unpredictable message delays can let a farther node's exploration message arrive before a nearer node's, breaking the BFS ordering.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q61",
+      question: "A DFS spanning tree algorithm ensures DFS by:",
+      options: [
+        "Sending messages to all neighbors simultaneously",
+        "Exploring neighbors sequentially and waiting for responses",
+        "Choosing the smallest processor ID",
+        "Using a global clock",
+      ],
+      correctIndex: 1,
+      explanation: "To force a DFS shape, the algorithm explores one neighbor at a time and waits for a parent/reject reply before moving on to the next — unlike the parallel flood used for BFS.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q62",
+      question: "What is the message complexity of the DFS spanning-tree algorithm with a known root?",
+      options: ["O(1)", "O(log n)", "O(m)", "O(n²)"],
+      correctIndex: 2,
+      explanation: "Like the BFS-style flood, the DFS algorithm sends a constant number of messages per edge, giving O(m) message complexity overall (though its time complexity is worse, at O(m), since exploration is serial).",
+      topic: "L2",
+    },
+    {
+      id: "w1-q63",
+      question: "For finding a spanning tree without a predefined root, each processor initially:",
+      options: [
+        "Waits for the root to contact it",
+        "Runs a copy of the DFS algorithm considering itself as root",
+        "Chooses a random neighbor",
+        "Immediately terminates",
+      ],
+      correctIndex: 1,
+      explanation: "With no predefined root, every processor runs its own copy of the DFS spanning-tree algorithm as if it were the root, tagging messages with its own ID; when copies collide, the larger ID wins.",
+      topic: "L2",
+    },
+    {
+      id: "w1-q64",
+      question: "The fundamental requirement of the leader election problem is:",
+      options: ["At least two processors become leaders", "Every processor becomes a leader", "Exactly one processor becomes the leader", "No processor makes a decision"],
+      correctIndex: 2,
+      explanation: "Leader election requires every admissible execution to end with exactly one processor deciding 'leader' and all others deciding 'non-leader.'",
+      topic: "L3",
+    },
+    {
+      id: "w1-q65",
+      question: "Why is leader election impossible in an anonymous synchronous ring?",
+      options: [
+        "Messages cannot travel around the ring",
+        "Processors have identical initial states and cannot break symmetry",
+        "The ring contains cycles",
+        "Processors cannot communicate in synchronous systems",
+      ],
+      correctIndex: 1,
+      explanation: "With no unique IDs, all processors start identically and every round produces identical messages/transitions everywhere — symmetry can never be broken, so a leader can never be singled out.",
+      topic: "L3",
+    },
+    {
+      id: "w1-q66",
+      question: "Suppose a ring has processor IDs: 4, 12, 7, 19, 3. Using the LCR algorithm, which processor will eventually be elected?",
+      options: ["3", "4", "12", "19"],
+      correctIndex: 3,
+      explanation: "LCR always elects the processor with the largest ID, since only the largest ID's message survives being forwarded all the way around the ring. Here that's 19.",
+      topic: "L3",
+    },
+    {
+      id: "w1-q67",
+      question: "In LCR, when a processor receives an ID smaller than its own ID, it:",
+      options: ["Forwards it", "Discards it", "Becomes the leader", "Reverses the ring direction"],
+      correctIndex: 1,
+      explanation: "A processor only forwards IDs larger than its own (since it has already lost); a smaller ID is simply discarded, since that candidate cannot win.",
+      topic: "L3",
+    },
+    {
+      id: "w1-q68",
+      question: "In LCR, when a processor receives its own ID back, it:",
+      options: ["Becomes a non-leader", "Starts a new election", "Becomes the leader", "Deletes its ID"],
+      correctIndex: 2,
+      explanation: "Receiving its own ID means the message has circled the entire ring without being beaten by a larger ID, so the processor elects itself leader.",
+      topic: "L3",
+    },
+    {
+      id: "w1-q69",
+      question: "What is the worst-case message complexity of LCR?",
+      options: ["O(n)", "O(log n)", "Θ(n²)", "Θ(n log n)"],
+      correctIndex: 2,
+      explanation: "LCR's worst case — IDs arranged in decreasing order around the ring — forces near-total propagation of every candidate ID before it's swallowed, giving Θ(n²) messages.",
+      topic: "L3",
+    },
+    {
+      id: "w1-q70",
+      question: "The main improvement of Hirschberg-Sinclair over LCR is:",
+      options: [
+        "It does not require unique IDs",
+        "It reduces worst-case message complexity",
+        "It eliminates message passing",
+        "It works only for anonymous rings",
+      ],
+      correctIndex: 1,
+      explanation: "HS still requires unique IDs and still elects the largest ID, but by probing exponentially growing neighborhoods in phases, it cuts worst-case message complexity from Θ(n²) down to O(n log n).",
+      topic: "L3",
+    },
+    {
+      id: "w1-q71",
+      question: "If e1 → e2 according to Lamport's happens-before relation, then a consistent logical clock must satisfy:",
+      options: ["C(e1) > C(e2)", "C(e1) = C(e2)", "C(e1) < C(e2)", "No relationship is required"],
+      correctIndex: 2,
+      explanation: "This is the clock consistency condition: causal precedence must be reflected as an increasing timestamp, i.e. e1 → e2 implies C(e1) < C(e2).",
+      topic: "L4",
+    },
+    {
+      id: "w1-q72",
+      question: "If C(e1) < C(e2) using a Lamport scalar clock, which conclusion is definitely valid?",
+      options: ["e1 → e2", "e2 → e1", "e1 and e2 are concurrent", "None of the above necessarily follows"],
+      correctIndex: 3,
+      explanation: "Scalar clocks satisfy consistency but not strong consistency — a smaller timestamp does not guarantee a causal relationship, since e1 and e2 could equally be concurrent.",
+      topic: "L4",
+    },
+    {
+      id: "w1-q73",
+      question: "Two events are logically concurrent when:",
+      options: [
+        "They occur at exactly the same physical time",
+        "Neither happens-before the other",
+        "They occur on the same processor",
+        "They have identical timestamps in every clock system",
+      ],
+      correctIndex: 1,
+      explanation: "Logical concurrency means neither e1 → e2 nor e2 → e1 holds — there is no causal path between them, regardless of physical timing.",
+      topic: "L4",
+    },
+    {
+      id: "w1-q74",
+      question: "Which relation is always true for a message m?",
+      options: ["receive(m) → send(m)", "send(m) → receive(m)", "send(m) ∥ receive(m)", "send(m) = receive(m)"],
+      correctIndex: 1,
+      explanation: "A message must be sent before it is received, so send(m) → receive(m) always holds by definition of the happens-before relation.",
+      topic: "L4",
+    },
+    {
+      id: "w1-q75",
+      question: "Which ordering guarantees that causally related messages are delivered in causal order?",
+      options: ["Non-FIFO ordering", "Random ordering", "Causal ordering", "Unordered delivery"],
+      correctIndex: 2,
+      explanation: "Causal ordering (CO) is precisely the channel model that guarantees messages are delivered respecting their send-time causal relationships — it's the strongest of the three models (CO ⊂ FIFO ⊂ non-FIFO).",
       topic: "L4",
     },
   ],
