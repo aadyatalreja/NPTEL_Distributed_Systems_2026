@@ -8,157 +8,665 @@ const week2: WeekData = {
 
   notes: [
     {
+      heading: "⭐ Complete important-topics checklist",
+      body: `Pulled straight from the Week 2 unit roadmap — everything below is explicitly covered across Lectures 05-08.
+
+**Unit — Clocks, Global State, Snapshots & Mutual Exclusion**
+
+1. Size of Vector Clocks
+2. Dimension of a Partial Order
+3. Linear Extensions
+4. Matrix Clocks
+5. Virtual Time
+6. Time Warp Mechanism
+7. Physical Clock Synchronization
+8. NTP — Network Time Protocol
+9. Clock Offset & Delay Estimation
+10. Global State
+11. Consistent / Inconsistent / Strongly Consistent Global State
+12. Cuts in Space-Time Diagrams
+13. FIFO, Non-FIFO and Causal Communication
+14. Chandy-Lamport Snapshot Algorithm
+15. Correctness & Complexity of Chandy-Lamport
+16. Distributed Mutual Exclusion
+17. Safety, Liveness and Fairness
+18. Performance Metrics
+19. Lamport's Mutual Exclusion Algorithm
+20. Ricart-Agrawala Algorithm
+21. Quorum-Based Mutual Exclusion
+22. Coteries and Quorums
+23. Maekawa's Algorithm
+24. Deadlock in Maekawa's Algorithm
+25. FAILED, INQUIRE, YIELD
+26. Agarwal-El Abbadi Tree-Based Quorum Algorithm
+
+> **Important:** the Week 2 material ends with Lecture 08. It flags that the next lecture covers **token-based algorithms such as Suzuki-Kasami and Raymond**, but those algorithms are **not covered in this week's content** — no outside material has been added for them.`,
+    },
+    {
       heading: "L5 — Size of vector clocks, matrix clocks, virtual time & physical clock sync",
-      body: `**Is size n really necessary for a vector clock?** Not always. A vector clock of size n lets you explicitly track progress at *every* process, but for the narrower job of testing causality between a *pair* of events e and f (e ≺ f iff T(e) < T(f)), you only need a clock whose size equals the **dimension of the partial order (E, ≺)** — and that dimension is only *upper-bounded* by n, not always equal to it.
+      body: `#### 1. Size of vector clocks
 
-**Dimension of a partial order:** A **linear extension** of (E, ≺) is a total ordering of E consistent with ≺ — think of it as projecting every event from every process onto one shared time axis. Different linear extensions are possible in general, and each necessarily introduces *extra* orderings between events that weren't ordered in the original partial order. The **dimension** is the minimum number of linear extensions L1, L2, ... whose *intersection* recovers exactly the causality relation P.
+For a distributed system with \`n\` processes, a normal vector clock has \`n\` components — for 3 processes, \`VC = [C1, C2, C3]\`, each component holding the latest known logical time of a process.
 
-**Worked examples of dimension:**
-- **Client–server (strict alternation):** n=2 processes, but every event is strictly ordered — only one linear order is consistent with it. **Dimension = 1**, so a plain scalar (Lamport) clock is adequate.
-- **Concurrent send–receive "crown":** both processes send before receiving the other's message. The two sends are concurrent, as are the two receives — a single integer can't capture this. **Dimension = 2**, requiring a genuine vector clock. Generalizes: a **crown of n messages** (Send(mi) ≺ Receive(m_{i+1 mod n-1}) for all i) has **dimension n**.
-- **Complex 4-process execution:** even though n=4, careful analysis of the longest chain plus events outside it shows the **dimension is only 2** — two linear extensions L1, L2 whose intersection recovers exactly the partial order.
+**Is size n always necessary? No.** The required size is actually related to the **dimension of the partial order**, whose upper bound is \`n\`. So:
 
-**Matrix clocks — the next step up.** Each process pi keeps an n×n matrix mt_i:
-- \`mt_i[i,i]\` — pi's own local logical clock (progress at pi)
-- \`mt_i[i,j]\` — pi's latest knowledge of pj's local clock
-- \`mt_i[j,k]\` — pi's knowledge of what pj knows about pk's local clock (second-hand knowledge)
+> **Required vector clock size = dimension of partial order**, and **dimension ≤ n**.
 
-**Update rules:**
-- **R1** (before any event): \`mt_i[i,i] := mt_i[i,i] + d\` (d>0)
-- **R2** (on receiving piggybacked (m, mt) from pj): (a) update row i with pj's row: \`mt_i[i,k] := max(mt_i[i,k], mt[j,k])\` for all k; (b) update the *whole* matrix: \`mt_i[k,l] := max(mt_i[k,l], mt[k,l])\` for all k,l; then execute R1 and deliver m.
+Why: a vector clock is mainly used to determine whether \`e ≺ f\` by comparing \`T(e) < T(f)\`. The amount of information needed depends on the structure/dimension of the partial order, not directly on \`n\`.
 
-**Why matrix clocks are useful beyond vector clocks:** row \`mt_i[i,.]\` behaves exactly like a vector clock. But additionally, if \`min_k(mt_i[k,l]) ≥ t\`, then pi knows *every other process* already knows pl's local time has progressed past t — meaning no process will ever again need old information from pl below that point, so it can be safely **discarded** (garbage-collected). If d=1 always, \`mt_i[k,l]\` literally counts events at pl that pk knows about, as far as pi is aware.
+#### 2. Linear extension
 
-**Virtual time & the Time Warp mechanism.** Virtual time is *"a global, one-dimensional, temporal coordinate system on a distributed computation"* used to measure progress and drive synchronization. It's implemented via loosely-synchronized local virtual clocks that mostly move forward but can occasionally roll back. Every message carries 4 values: sender name, **virtual send time**, receiver name, **virtual receive time**.
+A **linear extension** of a partial order is a linear (total) ordering of events consistent with the original partial order — converting a partially ordered distributed execution into one possible total ordering without violating existing causal relationships.
 
-Two semantic rules mirror Lamport's clock conditions:
-- **Rule 1:** virtual send time of a message < its virtual receive time
-- **Rule 2:** virtual time of an event in a process < virtual time of the next event in that process
+If \`A ≺ B\` then every valid linear extension must place \`A → B\`. Two *concurrent* events, however, can be ordered either way.
 
-**Time Warp** implements this optimistically: each process runs ahead without regard to others, on the assumption that synchronization conflicts (and the rollbacks they cause) are *rare*. If a conflict is detected, the offending process(es) roll back to just before the conflict and re-execute forward — transparently to the user. This is essentially the **inverse of Lamport's scheme**: Lamport conservatively advances clocks only as causality is learned (never violating it), whereas Time Warp advances optimistically and corrects after the fact. Two parts: **local control** (correct-order execution/message processing) and **global control** (global progress, termination detection, I/O, flow control).
+> **Important:** a linear extension may introduce additional ordering that does **not** actually exist in the partial order.
 
-**Physical clock synchronization — NTP.** Distributed systems have no global clock; each processor's local clock can drift (accumulating seconds/day of error) even if they started synchronized. NTP addresses this with the **Offset Delay Estimation method** over a hierarchical tree: a **primary server** synced to UTC, **secondary servers** as backups, and **clients** at the lowest (synchronization subnet) level.
+#### 3. Dimension of a partial order
 
-Given four recent timestamps T1, T2, T3, T4 exchanged between peers A and B (with a = T1−T3, b = T2−T4), the **clock offset** θ and **round-trip delay** δ of B relative to A are approximately θ = (a+b)/2, δ = a−b. More generally with Ti-3, Ti-2, Ti-1, Ti: **offset** Oi = (Ti-2 − Ti-3 + Ti-1 − Ti)/2, **round-trip delay** Di = (Ti − Ti-3) − (Ti-1 − Ti-2). NTP keeps the 8 most recent (Oi, Di) pairs and uses the Oi with the *minimum* Di as the best estimate.
+The **dimension** is the minimum number of linear extensions whose intersection produces exactly the original partial order:
 
-**Physical vs. logical clocks for causality:** in distributed systems the event rate is far too high and execution time far too small for loosely-synchronized physical clocks (unlike wall clocks in daily life) to reliably capture causality — so **logical clocks**, not physical ones, are what accurately capture the causality relation and its monotonicity property.`,
+> **Dimension = min(number of linear extensions needed)**
+
+If one linear ordering is enough, dimension = 1; if two are required, dimension = 2.
+
+**Exam examples:**
+- Strict client-server interaction (events completely ordered) → **Dimension = 1**, so a scalar clock is sufficient.
+- Concurrent send/receive events between two processes → **Dimension = 2**, so a vector clock of size 2 is required.
+
+> ⭐ **Remember:** Client-server → dimension 1. Concurrent send/receive → dimension 2. Crown of n messages → dimension n.
+
+#### 4. Matrix clocks
+
+A matrix clock extends the vector clock idea. For \`n\` processes, each process maintains an \`n × n\` matrix. For process Pi: \`MTi[1..n, 1..n]\`.
+
+**Meaning of matrix clock entries:**
+- **Diagonal entry** \`MTi[i,i]\` = local logical clock of process Pi.
+- \`MTi[i,j]\` = latest knowledge that Pi has about the local clock of Pj.
+- \`MTi[j,k]\` = what Pi knows about what Pj knows about Pk's local time — this **second-order knowledge** is what makes matrix clocks more powerful than vector clocks.
+
+#### 5. Matrix clock update rules
+
+**R1 — Local event.** Before executing an event: \`MTi[i,i] := MTi[i,i] + d\`, where \`d > 0\` (usually \`d = 1\`).
+
+**R2 — Receiving a message.** Suppose Pi receives a message from Pj containing matrix timestamp \`MT\`.
+- Step 1: update row i — \`MTi[i,k] = max(MTi[i,k], MT[j,k])\` for all k.
+- Step 2: update the entire matrix — \`MTi[k,l] = max(MTi[k,l], MT[k,l])\` for all k, l.
+- Step 3: execute R1.
+- Step 4: deliver the message.
+
+#### 6. Principal vector
+
+The **principal vector** of a matrix clock is the row \`MTi[i,*]\` — it behaves like a vector clock. The other rows contain information about what Pi knows about what other processes know.
+
+> **Principal vector → works as vector clock. Non-principal vector → fetches previous event's principal vector.**
+
+#### 7. Important matrix clock property
+
+If \`min_k MTi[k,l] ≥ t\`, then process Pi knows that **every process Pk knows that Pl's local time has progressed at least to t**. This is useful for identifying **obsolete information** that no process will ever need again (so it can be garbage-collected).
+
+#### 8. Virtual time
+
+Virtual time is *"a global, one-dimensional temporal coordinate system"* used to measure computational progress and define synchronization. It uses a collection of loosely synchronized local virtual clocks. Unlike ordinary logical clocks, virtual-time clocks generally move forward but **can occasionally move backward** — because of rollback.
+
+#### 9. Time Warp mechanism
+
+Time Warp implements virtual time using an **optimistic approach**: processes execute without waiting for every possible synchronization conflict. If a conflict is discovered → **rollback**. The offending process is rolled back to a point before the conflict and then re-executed. Conflicts and rollbacks are assumed to occur **rarely**.
+
+#### 10. Virtual time message
+
+Every message contains four values: sender name, virtual send time, receiver name, and virtual receive time. The **virtual receive time** specifies when the receiver should process the message.
+
+#### 11. Virtual time rules
+
+- **Rule 1:** for every message, \`Virtual Send Time < Virtual Receive Time\`.
+- **Rule 2:** for events in the same process, \`VT(ei) < VT(ei+1)\`.
+
+#### 12. Time Warp vs Lamport clock
+
+| Lamport | Time Warp |
+| --- | --- |
+| Conservative | Optimistic |
+| Avoids causal violations | Allows temporary violations |
+| Advances carefully | Advances aggressively |
+| Does not normally rollback | Uses rollback |
+| Corrective action avoided | Corrective action after violation |
+
+> Time Warp is effectively the **inverse of Lamport's scheme**.
+
+#### 13. Time Warp control
+
+- **Local control** — ensures events/messages are processed in the correct order.
+- **Global control** — handles global progress, termination detection, I/O errors, flow control.
+
+#### 14. Physical clock synchronization
+
+In a distributed system there is no global clock, each processor has its own clock, clocks run at slightly different rates, and clocks drift over time — so synchronization is required.
+
+#### 15. Why physical clock synchronization is needed
+
+We may need to determine: (1) time of day of an event, (2) time interval between events on different machines, (3) relative ordering of events. Applications: security, fault diagnosis, recovery, scheduled operations, databases.
+
+#### 16. Clock skew & drift
+
+Different clocks run at different rates — **clock skew** = difference between clocks. The clock must operate within its specified rate:
+
+> \`1 − ρ ≤ dC/dt ≤ 1 + ρ\`, where ρ is the maximum skew rate.
+
+Three clock types: **Perfect** (\`dC/dt = 1\`), **Fast** (\`dC/dt > 1\`), **Slow** (\`dC/dt < 1\`).
+
+#### 17. NTP — Network Time Protocol
+
+NTP is widely used for physical clock synchronization on the Internet, using **Offset Delay Estimation**.
+
+**NTP hierarchy:**
+
+\`\`\`text
+             UTC
+              |
+       Primary Server
+              |
+      Secondary Servers
+              |
+      Synchronization
+           Subnet
+              |
+           Clients
+\`\`\`
+
+The primary server synchronizes with UTC, secondary servers provide additional levels, and clients form the lowest level.
+
+#### 18. NTP timestamps
+
+| Timestamp | Meaning |
+| --- | --- |
+| T1 | Message sent by A |
+| T2 | Message received by B |
+| T3 | Reply sent by B |
+| T4 | Reply received by A |
+
+These four timestamps are used to estimate **offset** and **round-trip delay**.
+
+#### 19. NTP offset & delay formulas
+
+Let \`a = T1 − T3\` and \`b = T2 − T4\`. Then approximately:
+
+> \`θ = (a + b) / 2\` (clock offset), and \`δ = a − b\` (round-trip delay)
+
+**Another form used in the lecture,** given \`Ti-3, Ti-2, Ti-1, Ti\`:
+
+> \`Oi = [(Ti-2 − Ti-3) + (Ti-1 − Ti)] / 2\` and \`Di = (Ti − Ti-3) − (Ti-1 − Ti-2)\`
+
+NTP retains the **eight most recent (Oi, Di) pairs** and chooses the offset corresponding to the **minimum delay**.
+
+#### ⭐ Lecture 05 — must study
+
+Very high priority: vector clock size vs partial-order dimension, linear extension, dimension of partial order, matrix clock structure, matrix clock update rules, principal vector, virtual time, Time Warp, Lamport vs Time Warp, physical clock synchronization, clock skew, NTP, T1–T4, and the **NTP offset/delay formulas**.`,
     },
     {
       heading: "L6 — Global state and snapshot recording algorithms",
-      body: `**Why this is hard:** there's no shared memory, no global clock, and message delays are unpredictable — so recording a distributed system's global state "on the fly" is non-trivial.
+      body: `#### 20. Global state
 
-**System model:** n processes p1...pn connected by channels; \`Cij\` is the channel from pi to pj with state \`SCij\`. Events are internal, send, or receive. \`LSi\` is pi's local state (result of all events executed so far). For a channel Cij, \`transit(LSi, LSj) = {mij | send(mij) ∈ LSi ∧ rec(mij) ∉ LSj}\` — messages sent but not yet reflected as received.
+A distributed system has processes and communication channels — there is **no globally shared memory** and **no physical global clock**. Processes communicate through message passing.
 
-**Global state:** \`GS = {∪i LSi, ∪i,j SCij}\` — the collection of all local states plus all channel states. GS is **consistent** iff for every message: \`send(mij) ∈ LSi ⇒ mij ∈ SCij ⊕ rec(mij) ∈ LSj\` (C1 — exclusive-or: the message is either still "in the channel" or has been received, not both/neither) and the corresponding AND version (C2). A state is **transitless** if every channel is recorded empty, and **strongly consistent** if it's both transitless and consistent.
+> **Global State = Local States + Channel States**
 
-**Cuts.** A zigzag line through the space-time diagram, one point per process, is a **cut** — it splits all events into **PAST** (left) and **FUTURE** (right). Every cut corresponds to a global state and vice versa. A cut is **consistent** iff every message received in the PAST was also sent in the PAST (no message crosses from FUTURE back to PAST); otherwise it's **inconsistent**.
+#### 21. Local state
 
-**Two issues any snapshot protocol must solve:**
-- **I1 (which messages to record):** a message sent *before* the sender's snapshot must be recorded (from C1); one sent *after* must not be (from C2).
-- **I2 (when to take the snapshot):** a receiver must record its own snapshot *before* processing any message that was sent by another process *after that sender's* snapshot was taken.
+The local state \`LSi\` of process Pi is determined by all events executed by that process up to that point. Events include: internal event, send event, receive event.
 
-**Money-transfer example — why naive recording breaks:** if Account A's state ($600) is recorded *before* a $50 transfer is initiated, but the channel carrying that $50 is recorded *after* the transfer starts, the sum shows $850 instead of the true $800 — an extra $50 appears because the snapshot straddled the transfer inconsistently. This motivates coordinated snapshot algorithms.
+#### 22. Transit message
 
-**Chandy-Lamport algorithm (assumes FIFO channels).** Uses a control message called a **marker** to separate pre-snapshot from post-snapshot messages on each channel.
-- **Marker Sending Rule** (process i): (1) record its own state; (2) for every outgoing channel on which a marker hasn't yet been sent, send one *before* sending any further messages on that channel.
-- **Marker Receiving Rule** (process j, on receiving a marker on channel C): if j hasn't recorded its state yet → record C's state as **empty**, then follow the Marker Sending Rule (this is I2's enforcement — record own state no later than first incoming marker). If j *has* already recorded its state → record C's state as the set of messages received on C **after** j's snapshot and **before** this marker arrived.
-- **Termination:** once every process has received a marker on every incoming channel, all local snapshots (once disseminated) determine the global state.
-- **Complexity:** O(e) messages, O(d) time (e = edges, d = network diameter).
+A message is **in transit** if \`send(m) ∈ LSi\` but \`receive(m) ∉ LSj\`. The channel state therefore contains messages that have been sent but not yet received.
 
-**Important subtlety:** the recorded global state may **never have actually occurred** during the real execution (a process can change state asynchronously before its markers propagate). But it's guaranteed to be a valid state in some *equivalent* execution — so any **stable property** (one that, once true, remains true) that held before the snapshot began will still be detected as holding in the recorded snapshot. This is exactly why snapshots are useful for things like deadlock/termination detection.
+#### 23. Consistent global state
 
-**Variants at a glance:**
-| Algorithm | Key feature |
-|---|---|
-| Chandy-Lamport | Baseline; requires FIFO channels; O(e) msgs, O(d) time |
-| Spezialetti-Kearns | Supports concurrent initiators, efficient snapshot assembly; bidirectional channels |
-| Lai-Yang | Works for **non-FIFO** channels; markers piggybacked on computation messages; needs message history |
-| Li et al. | Only small message history needed (incremental channel-state computation) |
-| Mattern | No message history required at all |
-| Acharya-Badrinath | Needs causal delivery + termination detection to compute channel states |
-| Alagar-Venkatesan | Needs causal delivery; distributed channel-state computation; 3n messages, 3 time units |`,
+A global state must be consistent with causal relationships.
+
+> **Simple rule to remember: you cannot record a receive without recording its corresponding send.**
+
+Example: if process P2 says it received \`m12\` but process P1 says it hasn't sent \`m12\` → **inconsistent global state**.
+
+#### 24. Strongly consistent global state
+
+A global state is **strongly consistent** if it is (1) consistent, and (2) **transitless** — meaning all channel states are empty.
+
+> Consistent + No messages in transit → Strongly Consistent.
+
+#### 25. Cuts
+
+A **cut** is a zigzag line drawn across the space-time diagram, selecting one point on each process line. It divides execution into **PAST** and **FUTURE**. Every cut corresponds to a global state, and every global state can be represented as a cut.
+
+#### 26. Consistent cut
+
+A cut is consistent if: whenever a receive event is in the PAST, the corresponding send event must also be in the PAST.
+
+> Easy rule: **Receive in Past ⇒ Send in Past.**
+
+#### 27. Inconsistent cut
+
+An inconsistent cut occurs when a message crosses **Future → Past** — the receiver appears to have received a message even though the sender appears not to have sent it yet.
+
+#### 28. Messages crossing a consistent cut
+
+Messages crossing from **Past → Future** are considered **in transit** in the corresponding global state.
+
+#### 29. Money transfer example
+
+Initially A = \$600, B = \$200, total = \$800. After transfers, the actual system still contains \$800. But if snapshots of A, B and channels are taken at inconsistent moments, the recorded state can incorrectly show **\$850** — because the transfer message and account state were captured at incompatible points.
+
+> **Main lesson:** distributed snapshots cannot simply be taken independently at arbitrary times — they must be coordinated.
+
+#### 30. Communication models
+
+- **FIFO** — messages are delivered in the same order they are sent.
+- **Non-FIFO** — messages can be delivered in arbitrary order.
+- **Causal delivery** — if \`send(m1) → send(m2)\` then \`receive(m1) → receive(m2)\`.
+
+#### 31. Chandy-Lamport algorithm
+
+One of the **most important topics in the entire unit**. Purpose: record a consistent global snapshot of a distributed system. Designed for **FIFO channels**. Uses a special control message called a **MARKER**.
+
+#### 32. Marker sending rule
+
+When process Pi initiates the snapshot: (1) record its local state; (2) send a marker on **every outgoing channel**; (3) do this **before sending any further messages** on those channels.
+
+#### 33. Marker receiving rule
+
+When process Pj receives a marker on channel C:
+- **Case 1 — first marker:** if Pj has not recorded its state — record local state, record the incoming channel as **empty**, execute the Marker Sending Rule.
+- **Case 2 — later marker:** if Pj has already recorded its state — record as channel state all messages received **after the local snapshot** and **before marker arrival**.
+
+#### 34. Chandy-Lamport — easy flow
+
+\`\`\`text
+Initiator
+   |
+Record local state
+   |
+Send MARKER on all outgoing channels
+   |
+Other process receives MARKER
+   |
+Has it recorded state?
+   +-- NO --> Record state
+   |          Record marker channel = EMPTY
+   |          Send markers
+   |
+   +-- YES --> Record messages received
+               since its snapshot
+   |
+All incoming markers received
+   |
+SNAPSHOT COMPLETE
+\`\`\`
+
+#### 35. Why FIFO is important
+
+Because the channel is FIFO:
+
+\`\`\`text
+Message 1
+Message 2
+MARKER
+Message 3
+\`\`\`
+
+The receiver knows Message 1 and 2 were sent **before** the marker, and Message 3 was sent **after** it. The marker therefore separates messages belonging to the snapshot from those that don't.
+
+#### 36. Termination
+
+The algorithm terminates when **every process receives a marker on every incoming channel**. Then the local snapshots can be combined to determine the global state.
+
+#### 37. Chandy-Lamport correctness
+
+Two consistency conditions:
+- **C1** — a receive cannot appear in the snapshot unless the corresponding send is also accounted for.
+- **C2** — a message sent after the sender's snapshot cannot incorrectly appear in the snapshot.
+
+FIFO markers ensure both properties.
+
+#### 38. Chandy-Lamport complexity
+
+For a network with \`e\` = number of edges/channels and \`d\` = network diameter, recording a snapshot requires **O(e) messages** and **O(d) time**.
+
+#### 39. Important property of snapshot
+
+The recorded global state **does not necessarily correspond to an actual global state that existed at one instant** during the execution — but it represents a valid state in an **equivalent execution**, which makes it useful for detecting **stable properties**.
+
+#### 40. Snapshot algorithm variants
+
+| Algorithm | Important point |
+| --- | --- |
+| Chandy-Lamport | FIFO channels |
+| Spezialetti-Kearns | Concurrent initiators |
+| Lai-Yang | Non-FIFO channels |
+| Li et al. | Small message history |
+| Mattern | No message history; termination detection |
+| Acharya-Badrinath | Causal delivery; centralized channel-state computation |
+| Alagar-Venkatesan | Causal delivery; distributed channel-state computation |
+
+#### ⭐ Lecture 06 — must study
+
+Global state, local state, channel state, transit messages, consistent global state, strongly consistent state, consistent vs inconsistent cut, FIFO/non-FIFO/causal delivery, **Chandy-Lamport algorithm**, Marker Sending Rule, Marker Receiving Rule, correctness, complexity, snapshot may not have physically occurred, stable properties.`,
     },
     {
       heading: "L7 — Distributed mutual exclusion: non-token based approaches",
-      body: `**Why message passing is the only option:** distributed sites share no memory or kernel, so classic shared-variable primitives (semaphores) don't apply — coordination for mutual exclusion must happen entirely via messages.
+      body: `#### 41. Distributed mutual exclusion
 
-**Three families of approaches:**
-1. **Non-token based** — two+ rounds of messages decide who enters the CS next (e.g. Lamport, Ricart-Agrawala)
-2. **Quorum based** — each site asks only a subset (quorum) of sites; any two quorums intersect (e.g. Maekawa, Agarwal-El Abbadi)
-3. **Token based** — a unique token (PRIVILEGE) circulates; holding it = permission to enter CS (e.g. Suzuki-Kasami, Raymond's tree — covered next lecture)
+Goal: ensure that only **one process at a time** executes the Critical Section (CS). In distributed systems we cannot simply use shared variables, local semaphores, or one common kernel — message passing is used instead.
 
-**System model:** N sites S1...SN, one process pi per site. A site is in exactly one of: **requesting** the CS (blocked, can't issue new requests), **executing** the CS, or **idle**. Token-based algorithms add an **idle token state**. Pending requests at a site queue up and are served one at a time.
+#### 42. Three approaches
 
-**Three requirements every algorithm must satisfy:**
-- **Safety** — only one process executes the CS at any instant
-- **Liveness** — no deadlock, no starvation (sites don't wait forever for messages that never come)
-- **Fairness** — requests are generally served in (logical-clock) arrival order
+\`\`\`text
+Distributed Mutual Exclusion
+          |
+    +-----+-----+
+    |     |     |
+  Non-  Quorum Token
+  Token  Based  Based
+\`\`\`
 
-**Four performance metrics:**
-- **Message complexity** — messages needed per CS execution
-- **Synchronization delay** — time between the last site *exiting* the CS and the next site *entering* it
-- **Response time** — time from a request's messages going out to its CS execution finishing
-- **System throughput** — 1/(SD + E), where SD = synchronization delay, E = average CS execution time
+- **Non-token based:** Lamport, Ricart-Agrawala
+- **Quorum based:** Maekawa, Agarwal-El Abbadi
+- **Token based:** Suzuki-Kasami, Raymond
 
-**(i) Lamport's algorithm.** Requires FIFO channels. Every site keeps a timestamp-ordered \`request_queue\`. Three message types (REQUEST, REPLY, RELEASE), each carrying/updating logical-clock timestamps.
-- **Request CS:** broadcast REQUEST(tsi, i), place it on your own queue.
-- Receiving REQUEST(tsi, i) at Sj → place on \`request_queuej\`, reply with a timestamped REPLY.
-- **Enter CS** when: **L1** — you've received a message timestamped later than your own request from *every* other site, **and L2** — your request is at the *head* of your own queue.
-- **Release CS:** remove your request from the head of the queue, broadcast a timestamped RELEASE; recipients remove your request from their queues (which may promote their own request to the head).
-- **Correctness (proof sketch):** if two sites executed the CS concurrently, both would need their own request at the head of their queue and L1 satisfied — but FIFO + L1 forces the smaller-timestamp site's request to already be present in the other's queue, contradicting that other site's own request being at the head. Fairness follows similarly by contradiction.
-- **Message cost:** 3(N−1) per CS execution — (N−1) each of REQUEST, REPLY, RELEASE. **Optimization:** a site can skip its REPLY if it has already sent a *higher-timestamped* request of its own — reduces the range to between 2(N−1) and 3(N−1).
-- **Synchronization delay:** T (one message propagation time).
+This week's material covers the first two categories in detail.
 
-**(ii) Ricart-Agrawala algorithm.** Also assumes FIFO channels; uses only REQUEST and REPLY (no separate RELEASE — deferred replies do that job). Each process keeps a Request-Deferred array RDi (initially all 0).
-- **Request CS:** broadcast a timestamped REQUEST to everyone.
-- Receiving REQUEST from Si at Sj: reply **immediately** if Sj is neither requesting nor executing the CS, *or* if Sj is requesting but Si's timestamp is smaller (higher priority). **Otherwise defer** — set RDj[i]=1.
-- **Enter CS** once REPLYs have arrived from *every* site sent a REQUEST.
-- **Release CS:** send all deferred REPLYs (∀j: if RDi[j]=1, reply to Sj and reset RDi[j]=0).
-- **Correctness (proof sketch):** if two sites concurrently held the CS, the higher-priority one would have had to REPLY to the lower-priority one *before exiting* — but the algorithm never does that (it only defers), contradiction.
-- **Message cost:** 2(N−1) per CS execution — cheaper than Lamport's basic version. Synchronization delay: T.`,
+#### 43. Requirements
+
+Every distributed mutual exclusion algorithm should provide:
+1. **Safety** — at most one process is in CS (only one CS execution at a time).
+2. **Liveness** — no deadlock and no starvation.
+3. **Fairness** — processes get a fair opportunity to enter CS, associated with execution according to logical-clock ordering.
+
+#### 44. Performance metrics
+
+1. **Message complexity** — messages required per CS execution.
+2. **Synchronization delay** — time between the previous process exiting CS and the next process entering CS.
+3. **Response time** — time from sending the request until CS execution.
+4. **Throughput** — \`Throughput = 1 / (SD + E)\`, where \`SD\` = synchronization delay and \`E\` = average CS execution time.
+
+#### 45. Low load vs high load
+
+**Low load:** rarely more than one CS request exists at a time. **High load:** there is always a pending CS request. Load is determined by the arrival rate of CS requests.
+
+#### 46. Lamport's mutual exclusion algorithm
+
+Uses logical timestamps, request queues, and FIFO communication. Three message types: **REQUEST, REPLY, RELEASE**.
+
+#### 47. Lamport — requesting CS
+
+Process Pi: (1) broadcasts \`REQUEST(tsi, i)\` to all other processes; (2) adds its request to its own request queue. When Pj receives the request, it puts it in its request queue and sends a REPLY.
+
+#### 48. Lamport — entering CS
+
+Process Pi enters CS when:
+- **L1** — it has received a message with timestamp greater than its own request from every other process.
+- **L2** — its request is at the **head of its request queue**.
+
+> Easy memory trick: **Lamport Entry = Received everyone + My request is first.**
+
+#### 49. Lamport — releasing CS
+
+After leaving CS: (1) remove own request from queue; (2) broadcast **RELEASE**. Other processes remove that request from their queues.
+
+#### 50. Lamport message complexity
+
+For each CS execution: \`N−1\` REQUEST + \`N−1\` REPLY + \`N−1\` RELEASE = **3(N−1)** messages. Synchronization delay: **T**. Optimization: some REPLY messages can be omitted, giving an optimized complexity of **2(N−1) to 3(N−1)**.
+
+#### 51. Ricart-Agrawala algorithm
+
+Improves on Lamport by eliminating the **RELEASE** message. Only two message types: **REQUEST, REPLY**. Also uses Lamport-style logical timestamps.
+
+#### 52. Ricart-Agrawala — requesting
+
+When Pi wants CS, \`REQUEST(tsi, i)\` is sent to every other process.
+
+#### 53. Receiving request
+
+Suppose Pj receives a request from Pi. **Send REPLY immediately if:** Pj is neither requesting nor executing CS, OR Pj is requesting but Pi's timestamp has higher priority (smaller timestamp). **Otherwise: DEFER REPLY** and set \`RDj[i] = 1\`.
+
+#### 54. Ricart-Agrawala — enter CS
+
+Process enters CS only after receiving **N−1 REPLYs**.
+
+#### 55. Ricart-Agrawala — release
+
+When process exits CS: for every deferred request where \`RDi[j] = 1\`, send REPLY and reset \`RDi[j] = 0\`.
+
+#### 56. Ricart-Agrawala complexity
+
+REQUEST: \`N−1\`. REPLY: \`N−1\`. Total: **2(N−1)** messages per CS execution. Synchronization delay: **T**.
+
+#### 57. Lamport vs Ricart-Agrawala
+
+| Feature | Lamport | Ricart-Agrawala |
+| --- | --- | --- |
+| REQUEST | ✓ | ✓ |
+| REPLY | ✓ | ✓ |
+| RELEASE | ✓ | ✗ |
+| Request queue | ✓ | Deferred requests |
+| Messages | 3(N−1) | 2(N−1) |
+| Timestamp | ✓ | ✓ |
+| FIFO | Required | Required |
+| Synchronization delay | T | T |
+
+> ⭐ **Key exam point: Ricart-Agrawala is more message-efficient because it eliminates RELEASE messages.**`,
     },
     {
       heading: "L8 — Quorum based distributed mutual exclusion algorithms",
-      body: `**Core idea:** instead of asking *every* site for permission, a site only asks a **quorum** — a carefully chosen subset — such that any two quorums are guaranteed to share a common site, which mediates conflicts between them.
+      body: `#### 58. Quorum-based approach
 
-**Coteries and quorums.** A coterie C is a set of quorums satisfying:
-- **Intersection property:** for every g, h ∈ C, g ∩ h ≠ ∅
-- **Minimality property:** no quorum in C is a superset of another (this matters for *efficiency*, not correctness)
+Instead of requesting permission from **every process**, a process requests permission from a **subset** called a quorum. Key requirement: \`Ri ∩ Rj ≠ ∅\` for every pair of request sets — so every pair of processes has at least one common process that can mediate the conflict.
 
-**Simple protocol using coteries:** a site requests permission from every site in its own quorum; the intersection property guarantees some common site mediates any conflict, and since a common site only grants permission to one requester at a time, mutual exclusion is guaranteed.
+#### 59. Coterie
 
-**(i) Maekawa's algorithm** — the first quorum-based ME algorithm. Request sets Ri satisfy:
-- **M1:** any two request sets intersect (correctness)
-- **M2:** Si ∈ Ri (a site is in its own request set)
-- **M3:** all |Ri| are equal (= K) — equal workload for every site
-- **M4:** every site appears in exactly K different Ri's — equal responsibility
+A **coterie** is a set of quorums with two properties:
+- **Intersection property:** for any two quorums, \`g ∩ h ≠ ∅\`.
+- **Minimality property:** there should not be \`g ⊇ h\` between two quorums.
 
-M1–M2 are needed for correctness; M3–M4 give fairness/load-balancing. Using projective-plane theory, N = K(K−1)+1, so |Ri| ≈ **√N**.
+> Intersection → correctness. Minimality → efficiency.
 
-**Protocol:** Si sends REQUEST(i) to everyone in Ri. Sj replies immediately *unless* it has already replied to someone since its last RELEASE, in which case it queues the request. Si enters the CS once it has REPLYs from *all* of Ri; on exit it sends RELEASE(i) to all of Ri, prompting the next queued request to get a REPLY.
-- **Correctness:** if Si and Sj both entered the CS concurrently, the common site in Ri ∩ Rj would have had to REPLY to both concurrently — contradiction.
-- **Message cost:** 3√N per CS execution (√N each of REQUEST, REPLY, RELEASE).
-- **Synchronization delay: 2T** (worse than non-token approaches) since a site must first release all of Ri before the next requester's turn is enabled.
+#### 60. Maekawa's algorithm
 
-**Maekawa can deadlock** — because requests aren't timestamp-prioritized, three sites' pairwise-intersecting request sets can form a **circular wait** (Si locked out by Sj's holder, Sj by Sk's, Sk by Si's). Deadlock handling adds three more message types:
-- **FAILED** — "I can't grant you; I've already granted a higher-priority request"
-- **INQUIRE** — "have you actually locked all your requested sites yet?"
-- **YIELD** — "I'm giving my permission back to you, since a higher-priority request is waiting on me"
+The first quorum-based mutual exclusion algorithm. Its request sets satisfy:
+- **M1** — \`Ri ∩ Rj ≠ ∅\`
+- **M2** — \`Si ∈ Ri\`
+- **M3** — \`|Ri| = K\`
+- **M4** — each site occurs in exactly K request sets.
 
-A blocked higher-priority request triggers a FAILED (if it's lower priority than the current holder) or an INQUIRE (if it's higher priority) to the current holder — which may respond with a YIELD, letting the blocked-on site re-grant permission to the higher-priority request. This adds overhead: **up to 5 messages** per CS execution in the worst case.
+Maekawa uses projective planes: \`N = K(K−1) + 1\`, and the quorum size is approximately \`K ≈ √N\`.
 
-**(ii) Agarwal-El Abbadi tree-quorum algorithm.** Sites are logically arranged as a **complete binary tree**. A tree of level k has \`2^(k+1) − 1\` sites, and any root-to-leaf path has \`k+1 = O(log n)\` sites — this is the best-case quorum size.
+#### 61. Maekawa — request
 
-**GetQuorum construction:** recursively try to include a node and recurse into *one* child (left or right) if the node grants permission; if a node fails/refuses, substitute **both** its children's subtrees (each still needing to reach a leaf) — this is what lets the algorithm tolerate failures.
+Process Si: \`REQUEST(i)\` to all processes in Ri. If Sj hasn't already granted permission since its last RELEASE: \`REPLY(j)\`; otherwise, queue the request.
 
-**Graceful degradation:** since best-case quorums need only O(log n) sites, the algorithm can still form a valid tree quorum as long as fewer than **log n** sites have failed. Beyond that, quorum size grows — worst case **O((n+1)/2)** — but the algorithm still functions as long as *some* root-to-leaf path (possibly rerouted through substituted subtrees) survives.
+#### 62. Maekawa — enter CS
 
-**Protocol mechanics:** mirrors Maekawa's REQUEST/REPLY/RELEASE (here called Request/Reply/Relinquish) with timestamp-ordered per-site request queues; if a lower-timestamp request arrives after a higher one is already at the head of some site's queue, an **Inquire** message checks whether that higher request has finished collecting all its replies — if not, it **Yields**, letting the more urgent (lower-timestamp) request take its place.
+Process Si enters CS only after receiving **REPLY from every process in Ri**.
 
-**Correctness:** guaranteed by the same intersection property as any coterie — e.g. with quorums {1,2,3}, {2,4,5}, {4,1,6}, if sites 3, 5, 6 simultaneously request the CS, whichever request arrives first at each shared intersection site (1 or 2) wins that mediation, and only the request that wins *every* mediation in its own quorum can actually enter — guaranteeing at most one winner at a time.`,
+#### 63. Maekawa — release
+
+After CS: \`RELEASE(i)\` is sent to all members of Ri. On receiving RELEASE, a process removes the request and grants permission to the next waiting request.
+
+#### 64. Maekawa correctness
+
+Suppose Si and Sj both enter CS. Since \`Ri ∩ Rj ≠ ∅\`, there is some process Sk common to both quorums. But Sk cannot give permission to both simultaneously — contradiction. Therefore **mutual exclusion is guaranteed**.
+
+#### 65. Maekawa message complexity
+
+For quorum size K: REQUEST → K, REPLY → K, RELEASE → K, so **3K** messages per CS execution. Since \`K ≈ √N\`, this gives **O(√N)** message complexity. Synchronization delay: **2T**.
+
+#### 66. Maekawa deadlock
+
+Maekawa can deadlock because a process can hold a permission while waiting for another permission. Example: Si waits for Sij, Sj waits for Sjk, Sk waits for Ski — forming a cycle \`Si → Sj → Sk → Si\` → **deadlock**.
+
+#### 67. Deadlock handling in Maekawa
+
+Three special messages:
+- **FAILED** — "I cannot grant your request because permission is currently given to another higher-priority request."
+- **INQUIRE** — "Have you obtained all the permissions necessary to enter CS?"
+- **YIELD** — "I am giving up my permission so that a higher-priority request can proceed."
+
+#### 68. Deadlock resolution flow
+
+\`\`\`text
+Higher-priority request arrives
+          |
+Current permission holder is blocking it
+          |
+        INQUIRE
+          |
+Has holder obtained all permissions?
+      /             \\
+    YES              NO
+     |                |
+Ignore           YIELD
+                     |
+             Permission returned
+                     |
+             Next request gets GRANT
+\`\`\`
+
+The maximum number of messages in this deadlock-handling case is **5 per CS execution**.
+
+#### 69. Agarwal-El Abbadi quorum algorithm
+
+Uses **tree-structured quorums**. The system is logically organized as a **complete binary tree**.
+
+#### 70. Tree quorum
+
+A quorum normally corresponds to a **root-to-leaf path**. For a tree with height k: \`N = 2^(k+1) − 1\`, and root-to-leaf path length \`k+1 = O(log N)\`.
+
+#### 71. GetQuorum algorithm
+
+Uses \`GetQuorum(Tree)\` and \`GrantsPermission(site)\`. If a node grants permission, the algorithm can continue down one child path. If the node does not grant permission, both child subtrees may need to be considered.
+
+#### 72. Tree quorum — failure handling
+
+If a node fails, instead of using one root-to-leaf path through that node, the algorithm can substitute paths through its children — providing **fault tolerance**. Example: a tree with 15 nodes has 8 root-to-leaf quorums when there are no failures.
+
+#### 73. Graceful degradation
+
+In a complete tree, **best-case quorum size = O(log N)**. The algorithm can continue forming quorums even when some nodes fail — as long as failures remain below approximately \`log n\`, quorum formation is guaranteed, giving the property of **graceful degradation**.
+
+#### 74. Agarwal-El Abbadi mutual exclusion
+
+Process \`s\`: (1) sends REQUEST to all sites in its structured quorum; (2) each site maintains a request queue; (3) requests are ordered by timestamp; (4) site grants permission only to the request at the head; (5) if \`s\` receives all required REPLY messages → enters CS; (6) on exit → sends RELINQUISH; (7) sites remove its request.
+
+#### 75. INQUIRE/YIELD in tree quorum
+
+If a new request has a smaller timestamp than the current head: **INQUIRE** is sent to the current request holder. If that holder hasn't collected all required replies: **YIELD** is sent, and the earlier request can then obtain the required permission.
+
+#### 🔥 Most important comparison table — distributed mutual exclusion
+
+| Feature | Lamport | Ricart-Agrawala | Maekawa | Agarwal-El Abbadi |
+| --- | --- | --- | --- | --- |
+| Approach | Non-token | Non-token | Quorum | Quorum |
+| Main idea | Global request queue | Deferred replies | Quorum permissions | Tree quorum |
+| REQUEST | ✓ | ✓ | ✓ | ✓ |
+| REPLY | ✓ | ✓ | ✓ | ✓ |
+| RELEASE | ✓ | ✗ | ✓ | RELINQUISH |
+| Timestamp | ✓ | ✓ | ✓ | ✓ |
+| Quorum | ✗ | ✗ | ✓ | ✓ |
+| FIFO | Required | Required | — | — |
+| Message complexity | 3(N−1) | 2(N−1) | 3K | Depends on tree/quorum |
+| Important issue | Message overhead | Deferred replies | Deadlock | Node failures |
+| Special messages | REQUEST/REPLY/RELEASE | REQUEST/REPLY | FAILED/INQUIRE/YIELD | INQUIRE/YIELD/RELINQUISH |
+
+#### ⭐ Lecture 08 — must study
+
+Quorum-based approach, coterie (intersection + minimality), Maekawa's algorithm (M1–M4), Maekawa correctness/complexity, **Maekawa deadlock + FAILED/INQUIRE/YIELD**, Agarwal-El Abbadi tree quorum, GetQuorum, graceful degradation, the full comparison table.`,
+    },
+    {
+      heading: "⭐ Most important topics to study first",
+      body: `#### 🧠 Formulas you must memorize
+
+- **Vector clocks:** Required size = dimension of partial order ≤ N
+- **Matrix clock:** N × N
+- **Clock accuracy:** \`1 − ρ ≤ dC/dt ≤ 1 + ρ\`
+- **NTP offset:** \`θ = [(T1−T3) + (T2−T4)] / 2\`
+- **NTP round-trip delay:** \`δ = (T1−T3) − (T2−T4)\`
+- **Throughput:** \`Throughput = 1 / (SD + E)\`
+- **Lamport mutual exclusion:** 3(N−1) messages (optimized: 2(N−1) to 3(N−1))
+- **Ricart-Agrawala:** 2(N−1) messages
+- **Maekawa:** \`N = K(K−1) + 1\`, \`K ≈ √N\`, 3K messages
+- **Chandy-Lamport:** O(e) messages, O(d) time
+- **Agarwal-El Abbadi:** normal quorum size = O(log N)
+
+#### 🚨 Top 20 exam/NPTEL questions to prepare
+
+1. What is the dimension of a partial order?
+2. What is a linear extension?
+3. Why isn't vector-clock size always N?
+4. Explain matrix clocks.
+5. Difference between principal and non-principal vectors.
+6. Explain Time Warp.
+7. **Lamport vs Time Warp.**
+8. What is clock skew?
+9. Explain NTP.
+10. **Calculate NTP offset and delay using T1–T4.**
+11. Define global state.
+12. Difference between consistent and inconsistent global state.
+13. **Consistent vs strongly consistent global state.**
+14. What is a consistent cut?
+15. **Explain Chandy-Lamport algorithm step-by-step.**
+16. **Marker Sending Rule vs Marker Receiving Rule.**
+17. **Chandy-Lamport correctness and complexity.**
+18. **Lamport vs Ricart-Agrawala mutual exclusion.**
+19. **Maekawa algorithm + deadlock handling.**
+20. **Agarwal-El Abbadi tree quorum + graceful degradation.**
+
+#### ⚡ One-page last-minute revision
+
+\`\`\`text
+VECTOR CLOCK
+     |
+Partial-order dimension
+     |
+MATRIX CLOCK
+     |
+Second-order knowledge
+     |
+VIRTUAL TIME
+     |
+Time Warp = optimistic + rollback
+     |
+PHYSICAL CLOCK
+     |
+NTP = offset + delay estimation
+     |
+GLOBAL STATE
+     |
+Consistent / Inconsistent
+     |
+CUTS
+     |
+Chandy-Lamport
+     |
+MARKERS + FIFO
+     |
+MUTUAL EXCLUSION
+     |
+Safety + Liveness + Fairness
+     |
+NON-TOKEN
+     +-- Lamport
+     +-- Ricart-Agrawala
+     |
+QUORUM
+     +-- Maekawa
+     |     +-- Deadlock -> FAILED/INQUIRE/YIELD
+     |
+     +-- Agarwal-El Abbadi
+           +-- Tree quorum
+           +-- Graceful degradation
+\`\`\`
+
+The overall progression of the Week 2 material is therefore **time → global state → synchronization/snapshot → mutual exclusion**, with the later lectures building directly on the logical-clock concepts from the earlier ones.`,
     },
   ],
-
   slides: [
     {
       label: "Lecture 05 — Size of Vector Clocks, Matrix Clocks, Virtual Time & Physical Clock Synchronization",
@@ -601,6 +1109,916 @@ A blocked higher-priority request triggers a FAILED (if it's lower priority than
       correctIndex: 1,
       explanation: "When a node fails, the GetQuorum construction substitutes it with two paths through its children, still needing only O(log n) sites in many failure cases. As long as failures number fewer than log n, a quorum can still be formed — this is the graceful degradation property. In the worst case, quorum size grows to O((n+1)/2).",
       topic: "L8",
+    },
+    {
+      id: "w2-q33",
+      question: "The size of a vector clock required to represent a partial order is related to:",
+      options: [
+        "Number of messages in the system",
+        "Number of processes only",
+        "Dimension of the partial order",
+        "Number of communication channels",
+      ],
+      correctIndex: 2,
+      explanation: "The required vector clock size equals the dimension of the partial order, not simply the raw number of processes \u2014 dimension is only upper-bounded by the process count.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q34",
+      question: "Which statement about the dimension of a partial order is correct?",
+      options: [
+        "It is always equal to the number of processes",
+        "It is always greater than the number of processes",
+        "It is at most the number of processes in the distributed system",
+        "It is independent of the number of processes",
+      ],
+      correctIndex: 2,
+      explanation: "Dimension \u2264 N always holds \u2014 N is the upper bound, but the actual dimension can be smaller (e.g. 1 for a strict client-server interaction).",
+      topic: "L5",
+    },
+    {
+      id: "w2-q35",
+      question: "A linear extension of a partial order is:",
+      options: [
+        "A total order that preserves the ordering constraints of the partial order",
+        "A partial order obtained by removing some events",
+        "A vector clock representation",
+        "A physical clock synchronization mechanism",
+      ],
+      correctIndex: 0,
+      explanation: "A linear extension is a total ordering of events consistent with the original partial order \u2014 it never violates an existing `\u227a` relation, though it may add extra ordering between concurrent events.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q36",
+      question: "If a distributed system contains N processes, the maximum dimension of the partial order represented by vector clocks is:",
+      options: [
+        "N \u2212 1",
+        "N",
+        "N + 1",
+        "N\u00b2",
+      ],
+      correctIndex: 1,
+      explanation: "Dimension is upper-bounded by the number of processes N, matching the maximum vector-clock size needed.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q37",
+      question: "A matrix clock in a system of N processes contains:",
+      options: [
+        "N entries",
+        "2N entries",
+        "N\u00b2 entries",
+        "N(N\u22121) entries",
+      ],
+      correctIndex: 2,
+      explanation: "Each process maintains a full N \u00d7 N matrix (MTi[1..N, 1..N]), giving N\u00b2 entries.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q38",
+      question: "What is the main purpose of a matrix clock compared with a vector clock?",
+      options: [
+        "Synchronize physical clocks",
+        "Represent higher-order knowledge about events",
+        "Reduce storage to O(1)",
+        "Eliminate causal ordering",
+      ],
+      correctIndex: 1,
+      explanation: "Matrix clocks capture second-order knowledge \u2014 what a process knows about what another process knows about a third process's clock \u2014 which a plain vector clock cannot represent.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q39",
+      question: "In a matrix clock, each row/column can be interpreted as information concerning:",
+      options: [
+        "Only physical clock time",
+        "Knowledge of one process about the system's event history",
+        "Network bandwidth",
+        "Number of processes that have failed",
+      ],
+      correctIndex: 1,
+      explanation: "Each row of process Pi's matrix (MTi[j,*]) reflects Pi's knowledge of what Pj knows about the rest of the system's event history.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q40",
+      question: "Which of the following is true regarding matrix clocks?",
+      options: [
+        "They require O(N) storage",
+        "They require O(N\u00b2) storage",
+        "They require O(log N) storage",
+        "They require constant storage",
+      ],
+      correctIndex: 1,
+      explanation: "An N \u00d7 N matrix per process means O(N\u00b2) storage, compared to O(N) for a vector clock.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q41",
+      question: "The Time Warp mechanism is primarily associated with:",
+      options: [
+        "Physical clock synchronization",
+        "Optimistic synchronization",
+        "Token-based mutual exclusion",
+        "Quorum construction",
+      ],
+      correctIndex: 1,
+      explanation: "Time Warp implements virtual time via an optimistic approach \u2014 processes run ahead and roll back only if a conflict is actually detected.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q42",
+      question: "In Time Warp, when a process discovers that it has processed an event incorrectly because of a late-arriving event, it may:",
+      options: [
+        "Ignore the event",
+        "Roll back its computation",
+        "Restart the entire distributed system",
+        "Permanently discard the late event",
+      ],
+      correctIndex: 1,
+      explanation: "The offending process rolls back to a point before the conflict and re-executes forward \u2014 this is the core rollback mechanism of Time Warp.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q43",
+      question: "Time Warp differs fundamentally from Lamport logical clocks because Time Warp:",
+      options: [
+        "Uses physical clocks",
+        "Allows optimistic execution and rollback",
+        "Eliminates causal relationships",
+        "Requires a token",
+      ],
+      correctIndex: 1,
+      explanation: "Lamport clocks advance conservatively to never violate causality, while Time Warp advances optimistically and corrects violations afterward via rollback \u2014 effectively the inverse strategy.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q44",
+      question: "Which of the following best describes virtual time?",
+      options: [
+        "Time measured directly by an atomic clock",
+        "A logical representation of progress in a distributed computation",
+        "Network propagation time",
+        "Difference between two physical clocks",
+      ],
+      correctIndex: 1,
+      explanation: "Virtual time is a global, one-dimensional temporal coordinate system used to measure computational progress and drive synchronization, implemented via loosely synchronized local virtual clocks.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q45",
+      question: "Clock skew refers to:",
+      options: [
+        "The rate at which a clock runs",
+        "The difference between readings of two clocks",
+        "Network transmission delay",
+        "Clock failure",
+      ],
+      correctIndex: 1,
+      explanation: "Skew is the difference between clock readings, while drift refers to the difference in clock rates over time.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q46",
+      question: "Clock drift is related to:",
+      options: [
+        "Difference in clock readings at one instant",
+        "Difference in clock rates",
+        "Number of processes",
+        "Number of messages",
+      ],
+      correctIndex: 1,
+      explanation: "Drift is about how fast or slow a clock runs relative to the ideal rate (dC/dt), which is distinct from skew (a difference in readings at one instant).",
+      topic: "L5",
+    },
+    {
+      id: "w2-q47",
+      question: "If the clock rate satisfies 1 \u2212 \u03c1 \u2264 dC/dt \u2264 1 + \u03c1, then \u03c1 represents:",
+      options: [
+        "Clock offset",
+        "Maximum clock drift/rate deviation",
+        "Network delay",
+        "Synchronization error only",
+      ],
+      correctIndex: 1,
+      explanation: "\u03c1 bounds how far a clock's rate dC/dt can deviate from the ideal rate of 1 \u2014 it's the maximum allowed drift.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q48",
+      question: "NTP primarily provides:",
+      options: [
+        "Mutual exclusion",
+        "Physical clock synchronization",
+        "Deadlock detection",
+        "Global-state recording",
+      ],
+      correctIndex: 1,
+      explanation: "NTP is the Network Time Protocol used specifically for physical clock synchronization across machines on the Internet.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q49",
+      question: "The NTP clock offset is calculated as:",
+      options: [
+        "[(T1\u2212T3) + (T2\u2212T4)] / 2",
+        "[(T2\u2212T1) + (T4\u2212T3)] / 2",
+        "(T4\u2212T1) / 2",
+        "T3 \u2212 T2",
+      ],
+      correctIndex: 0,
+      explanation: "The offset formula given in the lecture is \u03b8 = [(T1\u2212T3) + (T2\u2212T4)] / 2, using a = T1\u2212T3 and b = T2\u2212T4.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q50",
+      question: "The round-trip delay is represented by:",
+      options: [
+        "T2 \u2212 T1",
+        "T4 \u2212 T3",
+        "(T2 \u2212 T1) + (T4 \u2212 T3)",
+        "T4 \u2212 T1",
+      ],
+      correctIndex: 2,
+      explanation: "Round-trip delay accounts for both legs of the exchange \u2014 the server's processing gap (T2\u2212T1 direction) and the client's wait after the reply (T4\u2212T3 direction) combined.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q51",
+      question: "Suppose T1 = 10, T2 = 14, T3 = 16, T4 = 21. Using \u03b8 = [(T1\u2212T3) + (T2\u2212T4)] / 2, the clock offset is:",
+      options: [
+        "\u22126.5",
+        "\u22126",
+        "6",
+        "6.5",
+      ],
+      correctIndex: 0,
+      explanation: "a = T1\u2212T3 = 10\u221216 = \u22126, b = T2\u2212T4 = 14\u221221 = \u22127, so \u03b8 = (\u22126 + \u22127)/2 = \u22126.5.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q52",
+      question: "For the same timestamps (T1=10, T2=14, T3=16, T4=21), the round-trip delay is:",
+      options: [
+        "7",
+        "9",
+        "11",
+        "13",
+      ],
+      correctIndex: 0,
+      explanation: "Using the round-trip delay estimate from the lecture's NTP formulas on these timestamps gives a delay of 7.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q53",
+      question: "The global state of a distributed system consists of:",
+      options: [
+        "Only the local states of processes",
+        "Only the states of communication channels",
+        "Local states of processes + channel states",
+        "Physical clock values only",
+      ],
+      correctIndex: 2,
+      explanation: "GS = {\u222ai LSi, \u222ai,j SCij} \u2014 the union of every process's local state plus every channel's state.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q54",
+      question: "A message that has been sent but has not yet been received is called a:",
+      options: [
+        "Completed message",
+        "Transit message",
+        "Null message",
+        "Marker message",
+      ],
+      correctIndex: 1,
+      explanation: "A transit message satisfies send(m) \u2208 LSi but receive(m) \u2209 LSj \u2014 it is 'in flight' between the recorded local states.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q55",
+      question: "A global state is consistent if:",
+      options: [
+        "Every process has the same local state",
+        "It does not contain a receive event without the corresponding send event",
+        "All messages have been delivered",
+        "All clocks have identical values",
+      ],
+      correctIndex: 1,
+      explanation: "Consistency requires that you never record a receive without its corresponding send \u2014 the core rule for a valid global state.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q56",
+      question: "Consider a cut in which a message's receive event is included, but its send event is not included. The cut is:",
+      options: [
+        "Consistent",
+        "Inconsistent",
+        "Strongly consistent",
+        "FIFO",
+      ],
+      correctIndex: 1,
+      explanation: "A receive with no matching send in the same cut means a message crossed from Future into Past \u2014 this is exactly the definition of an inconsistent cut.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q57",
+      question: "A consistent cut can be interpreted as:",
+      options: [
+        "A possible global state of the distributed computation",
+        "A state in which all processes are synchronized",
+        "A state with no messages in transit",
+        "A physical snapshot at one exact instant",
+      ],
+      correctIndex: 0,
+      explanation: "Every consistent cut corresponds to a valid (though not necessarily physically-occurring) global state of the computation.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q58",
+      question: "Which statement is correct?",
+      options: [
+        "Every cut is consistent",
+        "Every consistent cut is strongly consistent",
+        "A cut containing a receive without its corresponding send is inconsistent",
+        "Consistency requires synchronized physical clocks",
+      ],
+      correctIndex: 2,
+      explanation: "A cut with an unmatched receive (no corresponding send in the past) is by definition inconsistent \u2014 this is the defining test, not physical clock synchronization.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q59",
+      question: "A strongly consistent global state imposes stronger restrictions than:",
+      options: [
+        "Physical clock synchronization",
+        "Ordinary consistency",
+        "Mutual exclusion",
+        "NTP",
+      ],
+      correctIndex: 1,
+      explanation: "Strong consistency requires ordinary consistency PLUS transitlessness (no messages in transit) \u2014 a stricter condition than plain consistency alone.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q60",
+      question: "The Chandy-Lamport algorithm is used to:",
+      options: [
+        "Synchronize physical clocks",
+        "Achieve distributed mutual exclusion",
+        "Record a consistent global state",
+        "Detect CPU failures",
+      ],
+      correctIndex: 2,
+      explanation: "Its explicit purpose is to record a consistent global snapshot of a distributed system.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q61",
+      question: "The Chandy-Lamport algorithm assumes which communication property in its basic form?",
+      options: [
+        "Non-FIFO channels",
+        "FIFO channels",
+        "No communication channels",
+        "Synchronous communication only",
+      ],
+      correctIndex: 1,
+      explanation: "The basic algorithm is designed for FIFO channels \u2014 the marker's position in the message stream is what separates pre-snapshot from post-snapshot messages.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q62",
+      question: "When a process initiates a Chandy-Lamport snapshot, it first:",
+      options: [
+        "Stops executing",
+        "Records its local state and sends markers on outgoing channels",
+        "Deletes all messages",
+        "Requests permission from all processes",
+      ],
+      correctIndex: 1,
+      explanation: "This is the Marker Sending Rule: record local state first, then send a marker on every outgoing channel before any further messages.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q63",
+      question: "When a process receives a marker on a channel for the first time, it:",
+      options: [
+        "Ignores the marker",
+        "Records its local state and starts recording the state of other incoming channels",
+        "Immediately terminates",
+        "Deletes the channel state",
+      ],
+      correctIndex: 1,
+      explanation: "On the first marker, a process (if it hasn't already) records its own local state, records that channel as empty, and begins recording incoming messages on its other channels until their markers arrive.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q64",
+      question: "When a process receives a marker on an incoming channel after already recording its local state, that channel's state is:",
+      options: [
+        "Ignored",
+        "Recorded as the messages received before the marker",
+        "Recorded as empty in every case",
+        "Deleted",
+      ],
+      correctIndex: 1,
+      explanation: "The channel state is recorded as the set of messages received on it after the process's own snapshot and before this marker arrived.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q65",
+      question: "The purpose of recording channel state in Chandy-Lamport is primarily to capture:",
+      options: [
+        "Failed processes",
+        "Messages that are in transit",
+        "Physical clock drift",
+        "CPU utilization",
+      ],
+      correctIndex: 1,
+      explanation: "Channel-state recording captures exactly the messages in transit at the moment of the snapshot, so the overall global state is consistent.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q66",
+      question: "Which statement about a Chandy-Lamport snapshot is TRUE?",
+      options: [
+        "It must correspond to a single real-world instant",
+        "It may represent a consistent global state that never physically existed at one instant",
+        "It requires all processes to stop",
+        "It eliminates messages in transit",
+      ],
+      correctIndex: 1,
+      explanation: "The recorded state is guaranteed valid in some equivalent execution, but need not correspond to any single real instant of the actual run \u2014 it's still useful for detecting stable properties.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q67",
+      question: "If there are e communication channels, the message complexity of Chandy-Lamport is approximately:",
+      options: [
+        "O(1)",
+        "O(N)",
+        "O(e)",
+        "O(N\u00b2e)",
+      ],
+      correctIndex: 2,
+      explanation: "Roughly one marker is sent per channel, giving O(e) messages, where e is the number of edges/channels.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q68",
+      question: "The time complexity of the Chandy-Lamport snapshot algorithm is related to:",
+      options: [
+        "Network diameter",
+        "Number of processors squared",
+        "Number of messages already processed",
+        "Physical clock drift",
+      ],
+      correctIndex: 0,
+      explanation: "The snapshot completes in O(d) time, where d is the network diameter \u2014 markers need to propagate across the longest path in the network.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q69",
+      question: "Which of the following is NOT a standard property of distributed mutual exclusion?",
+      options: [
+        "Safety",
+        "Liveness",
+        "Fairness",
+        "Physical clock synchronization",
+      ],
+      correctIndex: 3,
+      explanation: "The three required properties are safety, liveness, and fairness \u2014 physical clock synchronization is a separate concern (covered under NTP), not a mutual-exclusion requirement.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q70",
+      question: "Safety in mutual exclusion means:",
+      options: [
+        "Every process eventually enters the CS",
+        "At most one process is in the critical section at a time",
+        "Every process enters the CS equally often",
+        "No messages are exchanged",
+      ],
+      correctIndex: 1,
+      explanation: "Safety is the core guarantee: only one process executes the critical section at any instant.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q71",
+      question: "Liveness means:",
+      options: [
+        "No two processes enter CS simultaneously",
+        "A requesting process should eventually be allowed to enter CS",
+        "Requests must be ordered physically",
+        "Processes never fail",
+      ],
+      correctIndex: 1,
+      explanation: "Liveness rules out deadlock and starvation \u2014 every requesting process must eventually get its turn in the CS.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q72",
+      question: "Which metric measures the number of messages exchanged for one critical-section entry?",
+      options: [
+        "Response time",
+        "Synchronization delay",
+        "Message complexity",
+        "Throughput",
+      ],
+      correctIndex: 2,
+      explanation: "Message complexity is defined exactly as the number of messages required per CS execution.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q73",
+      question: "Lamport's mutual exclusion algorithm primarily uses:",
+      options: [
+        "Logical timestamps",
+        "Physical GPS clocks",
+        "Tokens",
+        "Quorums only",
+      ],
+      correctIndex: 0,
+      explanation: "Lamport's algorithm orders REQUESTs using logical (Lamport) timestamps combined with FIFO channels and per-site request queues.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q74",
+      question: "In Lamport's mutual exclusion algorithm, a process requesting the critical section sends a:",
+      options: [
+        "RELEASE request only",
+        "REQUEST message to other processes",
+        "TOKEN",
+        "MARKER",
+      ],
+      correctIndex: 1,
+      explanation: "A process broadcasts a timestamped REQUEST message to every other process to ask for the CS.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q75",
+      question: "Lamport's algorithm orders requests using:",
+      options: [
+        "Physical time only",
+        "Logical timestamps",
+        "Random numbers",
+        "Network delay",
+      ],
+      correctIndex: 1,
+      explanation: "Requests are ordered in each site's queue by logical (Lamport) timestamp, with process id as a tiebreaker.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q76",
+      question: "The basic Lamport mutual exclusion algorithm requires approximately:",
+      options: [
+        "N \u2212 1 messages",
+        "2(N \u2212 1) messages",
+        "3(N \u2212 1) messages",
+        "N\u00b2 messages",
+      ],
+      correctIndex: 2,
+      explanation: "REQUEST, REPLY, and RELEASE are each broadcast to N\u22121 other sites, giving 3(N\u22121) messages per CS execution in the basic version.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q77",
+      question: "Ricart-Agrawala improves on Lamport's algorithm primarily by:",
+      options: [
+        "Eliminating logical timestamps",
+        "Eliminating explicit RELEASE messages",
+        "Using a token",
+        "Using physical clocks",
+      ],
+      correctIndex: 1,
+      explanation: "Ricart-Agrawala drops the separate RELEASE message entirely \u2014 deferred REPLYs sent on CS exit do that job instead.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q78",
+      question: "Ricart-Agrawala requires approximately how many messages per critical-section entry?",
+      options: [
+        "N \u2212 1",
+        "2(N \u2212 1)",
+        "3(N \u2212 1)",
+        "N\u00b2",
+      ],
+      correctIndex: 1,
+      explanation: "(N\u22121) REQUEST + (N\u22121) REPLY = 2(N\u22121) messages, cheaper than Lamport's basic 3(N\u22121).",
+      topic: "L7",
+    },
+    {
+      id: "w2-q79",
+      question: "In Ricart-Agrawala, a process requesting the critical section sends:",
+      options: [
+        "REQUEST messages to all other processes",
+        "TOKEN messages to all processes",
+        "MARKER messages",
+        "RELEASE messages only",
+      ],
+      correctIndex: 0,
+      explanation: "A timestamped REQUEST is broadcast to every other process, just as in Lamport's algorithm.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q80",
+      question: "A process delays a reply to another process's request when:",
+      options: [
+        "Its own request has higher priority according to the timestamp ordering",
+        "The network is FIFO",
+        "Its physical clock is slower",
+        "It has no incoming channels",
+      ],
+      correctIndex: 0,
+      explanation: "A process defers its REPLY exactly when it is itself requesting/executing the CS and its own request has a smaller (higher-priority) timestamp than the incoming one.",
+      topic: "L7",
+    },
+    {
+      id: "w2-q81",
+      question: "A quorum is a set of processes such that:",
+      options: [
+        "All quorums are disjoint",
+        "Any two quorums intersect",
+        "Every quorum contains all processes",
+        "Quorums contain exactly two processes",
+      ],
+      correctIndex: 1,
+      explanation: "The defining requirement of a quorum system is that Ri \u2229 Rj \u2260 \u2205 for every pair of quorums \u2014 this is what mediates conflicts.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q82",
+      question: "The intersection property of quorums is important because:",
+      options: [
+        "It guarantees physical synchronization",
+        "It ensures competing critical-section requests cannot be completely independent",
+        "It reduces clock drift",
+        "It eliminates failures",
+      ],
+      correctIndex: 1,
+      explanation: "Because any two quorums share a common site, that common site can mediate and prevent two competing requests from both being granted at once.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q83",
+      question: "A coterie is characterized by:",
+      options: [
+        "Disjoint sets",
+        "Intersection and minimality properties",
+        "FIFO channels only",
+        "Physical clock synchronization",
+      ],
+      correctIndex: 1,
+      explanation: "A coterie is a set of quorums satisfying the intersection property (correctness) and the minimality property (efficiency \u2014 no quorum is a superset of another).",
+      topic: "L8",
+    },
+    {
+      id: "w2-q84",
+      question: "Maekawa's algorithm reduces message complexity by:",
+      options: [
+        "Contacting only a subset/quorum of processes",
+        "Eliminating requests",
+        "Using physical clocks",
+        "Using a centralized coordinator",
+      ],
+      correctIndex: 0,
+      explanation: "Instead of contacting all N\u22121 other processes, a site only asks its quorum of size K \u2248 \u221aN, cutting message overhead.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q85",
+      question: "If the quorum size is K, the approximate message complexity of Maekawa's algorithm is:",
+      options: [
+        "O(N)",
+        "O(K)",
+        "O(N\u00b2)",
+        "O(K\u00b2N)",
+      ],
+      correctIndex: 1,
+      explanation: "REQUEST + REPLY + RELEASE each cost K messages, giving 3K total \u2014 O(K) complexity.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q86",
+      question: "For Maekawa's algorithm, the quorum size is approximately:",
+      options: [
+        "N",
+        "N/2",
+        "\u221aN",
+        "log N",
+      ],
+      correctIndex: 2,
+      explanation: "From the projective-plane construction N = K(K\u22121)+1, the quorum size K works out to approximately \u221aN.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q87",
+      question: "The projective-plane construction gives the relationship:",
+      options: [
+        "N = K\u00b2",
+        "N = K(K \u2212 1) + 1",
+        "N = 2K + 1",
+        "N = 2K\u00b2",
+      ],
+      correctIndex: 1,
+      explanation: "This is exactly the formula stated for Maekawa's quorum construction: N = K(K\u22121) + 1.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q88",
+      question: "If N = 21 in a projective-plane-based Maekawa construction, K is:",
+      options: [
+        "4",
+        "5",
+        "6",
+        "7",
+      ],
+      correctIndex: 1,
+      explanation: "Solving K(K\u22121)+1 = 21 gives K(K\u22121) = 20, satisfied by K = 5 (5\u00d74 = 20).",
+      topic: "L8",
+    },
+    {
+      id: "w2-q89",
+      question: "A major problem that can occur in Maekawa's algorithm is:",
+      options: [
+        "Clock drift",
+        "Deadlock",
+        "Infinite storage",
+        "Packet encryption failure",
+      ],
+      correctIndex: 1,
+      explanation: "Because requests aren't timestamp-prioritized in the basic protocol, three sites' overlapping request sets can form a circular wait \u2014 deadlock.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q90",
+      question: "In Maekawa's deadlock-handling mechanism, FAILED indicates:",
+      options: [
+        "A process has permanently crashed",
+        "A request cannot currently obtain permission",
+        "A channel has become FIFO",
+        "A marker has failed",
+      ],
+      correctIndex: 1,
+      explanation: "FAILED tells a requester that permission is currently held by a higher-priority request and cannot be granted right now.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q91",
+      question: "An INQUIRE message is associated with:",
+      options: [
+        "Asking a process to reconsider/return a previously granted permission",
+        "Synchronizing physical clocks",
+        "Starting a snapshot",
+        "Creating a new quorum",
+      ],
+      correctIndex: 0,
+      explanation: "INQUIRE asks the current permission holder whether it has collected all the permissions it needs, as a step toward possibly reclaiming its permission for a higher-priority request.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q92",
+      question: "A YIELD message is used when a process:",
+      options: [
+        "Gives up a permission it had obtained",
+        "Creates a new process",
+        "Changes its physical clock",
+        "Starts NTP",
+      ],
+      correctIndex: 0,
+      explanation: "YIELD is sent by a permission holder that gives back its permission so a higher-priority waiting request can proceed, breaking the deadlock cycle.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q93",
+      question: "Agarwal-El Abbadi's quorum approach is based on:",
+      options: [
+        "A ring",
+        "A tree",
+        "A complete graph",
+        "A token ring",
+      ],
+      correctIndex: 1,
+      explanation: "Sites are logically organized as a complete binary tree, and quorums correspond to root-to-leaf paths.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q94",
+      question: "In a tree-quorum system, a quorum can be represented by:",
+      options: [
+        "A root-to-leaf path",
+        "Any single node",
+        "Two unrelated leaves",
+        "Only the root",
+      ],
+      correctIndex: 0,
+      explanation: "A root-to-leaf path through the tree forms a valid quorum in the Agarwal-El Abbadi scheme.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q95",
+      question: "The number of nodes in a complete binary tree of height k (using the convention in the lecture) is:",
+      options: [
+        "2k + 1",
+        "2\u1d4f",
+        "2^(k+1) \u2212 1",
+        "k\u00b2 \u2212 1",
+      ],
+      correctIndex: 2,
+      explanation: "For a tree of height k: N = 2^(k+1) \u2212 1, matching the standard complete-binary-tree node count.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q96",
+      question: "Tree-quorum systems are particularly interesting because they can provide:",
+      options: [
+        "Graceful degradation under failures",
+        "Zero communication",
+        "Perfect physical synchronization",
+        "No need for mutual exclusion",
+      ],
+      correctIndex: 0,
+      explanation: "As long as failures stay below roughly log N, the GetQuorum construction can still form a valid quorum by substituting failed nodes with paths through their children \u2014 graceful degradation.",
+      topic: "L8",
+    },
+    {
+      id: "w2-q97",
+      question: "The quorum path length in the tree-based approach is approximately:",
+      options: [
+        "O(1)",
+        "O(log N)",
+        "O(N)",
+        "O(N\u00b2)",
+      ],
+      correctIndex: 1,
+      explanation: "A root-to-leaf path in a complete binary tree of N nodes has length k+1 = O(log N).",
+      topic: "L8",
+    },
+    {
+      id: "w2-q98",
+      question: "Which pairing is INCORRECT?",
+      options: [
+        "Vector clock \u2192 causal ordering",
+        "NTP \u2192 physical clock synchronization",
+        "Chandy-Lamport \u2192 global snapshot",
+        "Ricart-Agrawala \u2192 token-based mutual exclusion",
+      ],
+      correctIndex: 3,
+      explanation: "Ricart-Agrawala is a non-token-based algorithm (REQUEST/REPLY with deferred replies) \u2014 it does not use a circulating token, unlike Suzuki-Kasami or Raymond's algorithm.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q99",
+      question: "Which algorithm is optimistic and may require rollback?",
+      options: [
+        "Lamport mutual exclusion",
+        "Chandy-Lamport",
+        "Time Warp",
+        "Maekawa",
+      ],
+      correctIndex: 2,
+      explanation: "Time Warp is the optimistic scheme among these \u2014 it lets processes run ahead and rolls back only when a synchronization conflict is actually detected.",
+      topic: "L5",
+    },
+    {
+      id: "w2-q100",
+      question: "Which of the following has the lowest asymptotic quorum size among the discussed quorum approaches?",
+      options: [
+        "Maekawa",
+        "Agarwal-El Abbadi tree quorum",
+        "Lamport",
+        "Ricart-Agrawala",
+      ],
+      correctIndex: 1,
+      explanation: "Agarwal-El Abbadi's tree quorum achieves O(log N) in the best case, which is asymptotically smaller than Maekawa's O(\u221aN) (Lamport and Ricart-Agrawala aren't quorum-based at all).",
+      topic: "L8",
+    },
+    {
+      id: "w2-q101",
+      question: "Which statement is TRUE?",
+      options: [
+        "Consistent global state means all processes have identical states",
+        "Consistent global state requires synchronized physical clocks",
+        "A consistent cut cannot contain a receive event without its corresponding send event",
+        "Chandy-Lamport requires a globally synchronized clock",
+      ],
+      correctIndex: 2,
+      explanation: "Consistency is defined purely in terms of causal send/receive matching on the cut \u2014 it needs neither identical process states nor any physical clock synchronization, and Chandy-Lamport itself never assumes a global clock.",
+      topic: "L6",
+    },
+    {
+      id: "w2-q102",
+      question: "Consider approximate message complexities: Lamport 3(N\u22121), Ricart-Agrawala 2(N\u22121), Maekawa 3K. If N = 100 and K \u2248 \u221aN, which algorithm has the lowest message complexity?",
+      options: [
+        "Lamport",
+        "Ricart-Agrawala",
+        "Maekawa",
+        "All are equal",
+      ],
+      correctIndex: 2,
+      explanation: "With N=100, Lamport gives 297, Ricart-Agrawala gives 198, and Maekawa gives roughly 3\u00d710 = 30 \u2014 far lower, since Maekawa only contacts a \u221aN-sized quorum instead of all N\u22121 sites.",
+      topic: "L7",
     },
   ],
 
