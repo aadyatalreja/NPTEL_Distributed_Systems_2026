@@ -1,7 +1,16 @@
 import { Link } from "react-router-dom";
+import type { CSSProperties } from "react";
 import Shell from "../components/Shell";
 import TopologyMap from "../components/TopologyMap";
 import { weeks } from "../data/weeks";
+
+function statusColor(status: string): string {
+  return status === "ready"
+    ? "var(--color-success)"
+    : status === "in-progress"
+    ? "var(--color-warning)"
+    : "var(--color-hairline-lit)";
+}
 
 export default function Home() {
   const readyCount = weeks.filter((w) => w.status !== "empty").length;
@@ -42,46 +51,44 @@ export default function Home() {
         <TopologyMap weeks={weeks} />
       </div>
 
-      <div className="border-t" style={{ borderColor: "var(--color-hairline)" }}>
-        {weeks.map((w) => (
-          <Link
-            key={w.week}
-            to={`/week/${w.week}`}
-            className="focus-ring group flex items-center justify-between gap-4 py-4 border-b transition-colors hover:bg-[var(--color-surface-2)] px-2 -mx-2 rounded-md"
-            style={{ borderColor: "var(--color-hairline)" }}
-          >
-            <div className="flex items-baseline gap-4 min-w-0">
-              <span
-                className="text-sm tabular-nums shrink-0"
-                style={{ color: "var(--color-text-faint)" }}
-              >
-                {String(w.week).padStart(2, "0")}
-              </span>
-              <span className="font-medium truncate">{w.title}</span>
-            </div>
-            <StatusTag status={w.status} />
-          </Link>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {weeks.map((w) => {
+          const tint = statusColor(w.status);
+          const label =
+            w.status === "ready" ? "Ready" : w.status === "in-progress" ? "In progress" : "Empty";
+          return (
+            <Link
+              key={w.week}
+              to={`/week/${w.week}`}
+              className="focus-ring glass-card group flex flex-col justify-between gap-3 px-4 py-4 transition-transform duration-150 hover:-translate-y-0.5"
+              style={{ "--card-tint": tint } as CSSProperties}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-xs tabular-nums font-medium"
+                  style={{ color: "var(--color-text-faint)" }}
+                >
+                  {String(w.week).padStart(2, "0")}
+                </span>
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: tint, boxShadow: `0 0 0 3px color-mix(in srgb, ${tint} 18%, transparent)` }}
+                  aria-hidden="true"
+                />
+              </div>
+              <div>
+                <p className="font-medium text-sm leading-snug line-clamp-2">{w.title}</p>
+                <p
+                  className="text-xs mt-1.5"
+                  style={{ color: "var(--color-text-faint)" }}
+                >
+                  {label}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </Shell>
-  );
-}
-
-function StatusTag({ status }: { status: string }) {
-  const color =
-    status === "ready"
-      ? "var(--color-success)"
-      : status === "in-progress"
-      ? "var(--color-warning)"
-      : "var(--color-text-faint)";
-  const label = status === "ready" ? "Ready" : status === "in-progress" ? "In progress" : "Empty";
-  return (
-    <span
-      className="text-xs shrink-0 flex items-center gap-1.5"
-      style={{ color: "var(--color-text-faint)" }}
-    >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-      {label}
-    </span>
   );
 }

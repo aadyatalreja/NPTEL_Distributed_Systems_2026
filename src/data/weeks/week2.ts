@@ -8,7 +8,7 @@ const week2: WeekData = {
 
   notes: [
     {
-      heading: "⭐ Complete important-topics checklist",
+      heading: "Complete important-topics checklist",
       body: `Pulled straight from the Week 2 unit roadmap — everything below is explicitly covered across Lectures 05-08.
 
 **Unit — Clocks, Global State, Snapshots & Mutual Exclusion**
@@ -74,7 +74,7 @@ If one linear ordering is enough, dimension = 1; if two are required, dimension 
 - Strict client-server interaction (events completely ordered) → **Dimension = 1**, so a scalar clock is sufficient.
 - Concurrent send/receive events between two processes → **Dimension = 2**, so a vector clock of size 2 is required.
 
-> ⭐ **Remember:** Client-server → dimension 1. Concurrent send/receive → dimension 2. Crown of n messages → dimension n.
+> **Remember:** Client-server → dimension 1. Concurrent send/receive → dimension 2. Crown of n messages → dimension n.
 
 #### 4. Matrix clocks
 
@@ -199,7 +199,7 @@ Let \`a = T1 − T3\` and \`b = T2 − T4\`. Then approximately:
 
 NTP retains the **eight most recent (Oi, Di) pairs** and chooses the offset corresponding to the **minimum delay**.
 
-#### ⭐ Lecture 05 — must study
+#### Lecture 05 — must study
 
 Very high priority: vector clock size vs partial-order dimension, linear extension, dimension of partial order, matrix clock structure, matrix clock update rules, principal vector, virtual time, Time Warp, Lamport vs Time Warp, physical clock synchronization, clock skew, NTP, T1–T4, and the **NTP offset/delay formulas**.`,
     },
@@ -346,7 +346,7 @@ The recorded global state **does not necessarily correspond to an actual global 
 | Acharya-Badrinath | Causal delivery; centralized channel-state computation |
 | Alagar-Venkatesan | Causal delivery; distributed channel-state computation |
 
-#### ⭐ Lecture 06 — must study
+#### Lecture 06 — must study
 
 Global state, local state, channel state, transit messages, consistent global state, strongly consistent state, consistent vs inconsistent cut, FIFO/non-FIFO/causal delivery, **Chandy-Lamport algorithm**, Marker Sending Rule, Marker Receiving Rule, correctness, complexity, snapshot may not have physically occurred, stable properties.`,
     },
@@ -452,7 +452,7 @@ REQUEST: \`N−1\`. REPLY: \`N−1\`. Total: **2(N−1)** messages per CS execut
 | FIFO | Required | Required |
 | Synchronization delay | T | T |
 
-> ⭐ **Key exam point: Ricart-Agrawala is more message-efficient because it eliminates RELEASE messages.**`,
+> **Key exam point: Ricart-Agrawala is more message-efficient because it eliminates RELEASE messages.**`,
     },
     {
       heading: "L8 — Quorum based distributed mutual exclusion algorithms",
@@ -559,7 +559,7 @@ Process \`s\`: (1) sends REQUEST to all sites in its structured quorum; (2) each
 
 If a new request has a smaller timestamp than the current head: **INQUIRE** is sent to the current request holder. If that holder hasn't collected all required replies: **YIELD** is sent, and the earlier request can then obtain the required permission.
 
-#### 🔥 Most important comparison table — distributed mutual exclusion
+#### Most important comparison table — distributed mutual exclusion
 
 | Feature | Lamport | Ricart-Agrawala | Maekawa | Agarwal-El Abbadi |
 | --- | --- | --- | --- | --- |
@@ -575,13 +575,13 @@ If a new request has a smaller timestamp than the current head: **INQUIRE** is s
 | Important issue | Message overhead | Deferred replies | Deadlock | Node failures |
 | Special messages | REQUEST/REPLY/RELEASE | REQUEST/REPLY | FAILED/INQUIRE/YIELD | INQUIRE/YIELD/RELINQUISH |
 
-#### ⭐ Lecture 08 — must study
+#### Lecture 08 — must study
 
 Quorum-based approach, coterie (intersection + minimality), Maekawa's algorithm (M1–M4), Maekawa correctness/complexity, **Maekawa deadlock + FAILED/INQUIRE/YIELD**, Agarwal-El Abbadi tree quorum, GetQuorum, graceful degradation, the full comparison table.`,
     },
     {
-      heading: "⭐ Most important topics to study first",
-      body: `#### 🧠 Formulas you must memorize
+      heading: "Most important topics to study first",
+      body: `#### Formulas you must memorize
 
 - **Vector clocks:** Required size = dimension of partial order ≤ N
 - **Matrix clock:** N × N
@@ -595,7 +595,7 @@ Quorum-based approach, coterie (intersection + minimality), Maekawa's algorithm 
 - **Chandy-Lamport:** O(e) messages, O(d) time
 - **Agarwal-El Abbadi:** normal quorum size = O(log N)
 
-#### 🚨 Top 20 exam/NPTEL questions to prepare
+#### Top 20 exam/NPTEL questions to prepare
 
 1. What is the dimension of a partial order?
 2. What is a linear extension?
@@ -618,7 +618,7 @@ Quorum-based approach, coterie (intersection + minimality), Maekawa's algorithm 
 19. **Maekawa algorithm + deadlock handling.**
 20. **Agarwal-El Abbadi tree quorum + graceful degradation.**
 
-#### ⚡ One-page last-minute revision
+#### One-page last-minute revision
 
 \`\`\`text
 VECTOR CLOCK

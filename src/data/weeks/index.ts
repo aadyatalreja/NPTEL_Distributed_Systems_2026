@@ -12,16 +12,14 @@ const emptyWeek = (n: number, title: string): WeekData => ({
   flashcards: [],
 });
 
-export const weeks: WeekData[] = [
-  week1,
-  week2,
-  emptyWeek(3, "Week 3"),
-  emptyWeek(4, "Week 4"),
-  emptyWeek(5, "Week 5"),
-  emptyWeek(6, "Week 6"),
-  emptyWeek(7, "Week 7"),
-  emptyWeek(8, "Week 8"),
-];
+const TOTAL_WEEKS = 8;
+
+const placeholderWeeks: WeekData[] = Array.from(
+  { length: TOTAL_WEEKS - 2 },
+  (_, i) => emptyWeek(i + 3, `Week ${i + 3}`)
+);
+
+export const weeks: WeekData[] = [week1, week2, ...placeholderWeeks];
 
 export const getWeek = (n: number): WeekData | undefined =>
   weeks.find((w) => w.week === n);

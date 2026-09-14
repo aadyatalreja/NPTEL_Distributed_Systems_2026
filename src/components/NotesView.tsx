@@ -13,6 +13,17 @@ export function topicTint(label?: string): string {
   return "var(--color-accent)";
 }
 
+// The checklist and priority-recap sections get a distinct treatment —
+// detected by heading text rather than a decorative marker.
+const HIGHLIGHT_HEADINGS = [
+  "complete important-topics checklist",
+  "most important topics to study first",
+];
+
+function isHighlight(heading: string): boolean {
+  return HIGHLIGHT_HEADINGS.includes(heading.trim().toLowerCase());
+}
+
 export default function NotesView({ notes }: { notes: NoteSection[] }) {
   if (notes.length === 0) {
     return <EmptyState message="No notes yet for this week." />;
@@ -20,7 +31,7 @@ export default function NotesView({ notes }: { notes: NoteSection[] }) {
   return (
     <div className="space-y-6">
       {notes.map((section, i) => {
-        const highlight = section.heading.trim().startsWith("⭐");
+        const highlight = isHighlight(section.heading);
         const tint = highlight ? "var(--color-warning)" : topicTint(section.heading);
         return (
           <section

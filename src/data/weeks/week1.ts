@@ -8,7 +8,7 @@ const week1: WeekData = {
 
   notes: [
     {
-      heading: "⭐ Complete important-topics checklist",
+      heading: "Complete important-topics checklist",
       body: `Pulled straight from the unit outline — everything below is explicitly covered in the first lecture.
 
 **Unit 1 — Introduction to Distributed Systems**
@@ -85,7 +85,7 @@ Remember these **5 important properties**:
 4. **No global clock** — every processor has its own notion of time
 5. **Interdependencies** — although processors are independent, they depend on each other to accomplish tasks
 
-> ⭐ **Exam question — list the characteristics of distributed systems.** Answer: heterogeneity, concurrency, shared data, absence of a global clock, and interdependencies.
+> **Exam question — list the characteristics of distributed systems.** Answer: heterogeneity, concurrency, shared data, absence of a global clock, and interdependencies.
 
 #### 3. Components of a distributed system
 
@@ -139,7 +139,7 @@ The notes divide challenges into **system-level** and **algorithmic** issues.
 - **Synchronization** — coordination when accessing shared resources: mutual exclusion, leader election, clocks, global state recording
 - **Fault tolerance** — must maintain correctness despite node/link/process failures, via checkpointing, recovery, consensus, failure detection, distributed commit, self-stabilization
 
-#### 7. Transparency ⭐⭐⭐
+#### 7. Transparency
 
 **Very important for exams.** Transparency means **hiding the complexity/implementation details of the distributed system from the user**. There are **7 types**:
 
@@ -153,7 +153,7 @@ The notes divide challenges into **system-level** and **algorithmic** issues.
 | Concurrency transparency | Hides simultaneous access by multiple processes |
 | Failure transparency | Hides failures/recovery from the user |
 
-⭐ Memorize all 7.
+Memorize all 7.
 
 #### 8. Distributed algorithms
 
@@ -187,7 +187,7 @@ This is **VERY important**. Distributed algorithms must deal with:
     },
     {
       heading: "Unit 2 — Message Passing Systems",
-      body: `#### 12. Message-passing model ⭐⭐⭐
+      body: `#### 12. Message-passing model
 
 Processors communicate by sending messages through communication channels.
 
@@ -220,14 +220,14 @@ Configuration → Event → Configuration → Event → Configuration → ...
 
 > **Execution = sequence of configurations and events.**
 
-#### 16. Safety vs. Liveness ⭐⭐⭐
+#### 16. Safety vs. Liveness
 
 - **Safety** — "nothing bad ever happens." E.g. two processors should never enter the critical section simultaneously.
 - **Liveness** — "something good eventually happens." E.g. a requesting process eventually gets access to the critical section.
 
 Easy memory trick: **Safety = nothing bad. Liveness = something good eventually.** The notes explicitly use this distinction when defining admissible executions.
 
-#### 17. Synchronous vs. Asynchronous systems ⭐⭐⭐
+#### 17. Synchronous vs. Asynchronous systems
 
 **Synchronous** — processors operate in rounds:
 
@@ -247,7 +247,7 @@ Every processor operates in lockstep; time is measured in **rounds**.
 | Easier to analyze | Harder to analyze |
 | Time = rounds | Time depends on execution |
 
-#### 18. Broadcast ⭐⭐⭐
+#### 18. Broadcast
 
 Purpose: send information from one processor to all processors. Assume a rooted spanning tree already exists.
 
@@ -265,7 +265,7 @@ Root sends M → Children receive M → Children forward M → All nodes receive
 
 **Complexity:** messages = **n − 1**, time = **depth d**. This holds in both synchronous and asynchronous models.
 
-#### 19. Convergecast ⭐⭐⭐
+#### 19. Convergecast
 
 Basically the **opposite of broadcast** — collect information from all processors toward the root. Leaves send information to parents; each parent waits for all children, combines/aggregates the information, then sends the result upward.
 
@@ -300,7 +300,7 @@ If there is no predefined root: processors need **unique IDs**. Every processor 
     },
     {
       heading: "Unit 3 — Leader Election",
-      body: `#### 24. Leader election ⭐⭐⭐⭐⭐
+      body: `#### 24. Leader election
 
 Very important topic. Goal: **exactly one processor** should be elected as leader. Every processor eventually decides Leader or Non-leader — exactly one must choose Leader.
 
@@ -318,7 +318,7 @@ P6 ← P5 ← P4
 
 In an **oriented ring**, processors have a common notion of left and right.
 
-#### 26. Anonymous ring ⭐⭐⭐
+#### 26. Anonymous ring
 
 Processors have **no unique IDs**.
 
@@ -333,7 +333,7 @@ Same initial state → Same messages → Same received messages
 
 If one becomes leader, all would become leaders — that violates "exactly one leader."
 
-> ⭐ **Exam question — why is leader election impossible in an anonymous ring?** This proof is very important.
+> **Exam question — why is leader election impossible in an anonymous ring?** This proof is very important.
 
 #### 27. Uniform vs. non-uniform
 
@@ -344,7 +344,7 @@ If one becomes leader, all would become leaders — that violates "exactly one l
 
 Each processor has a unique identifier, e.g. \`3 → 37 → 19 → 4 → 25 → back to 3\`. The processor's **index** and **ID** are different — index is used for analysis, ID is what the processor actually knows.
 
-#### 29. LCR algorithm ⭐⭐⭐⭐⭐
+#### 29. LCR algorithm
 
 **LeLann–Chang–Roberts algorithm.** Goal: elect the processor with the largest ID.
 
@@ -357,7 +357,7 @@ Each processor initially sends its ID. When a processor receives ID \`j\`:
 
 **Complexity:** time = **O(n)**, worst-case messages = **Θ(n²)**. The worst arrangement causes \`n + (n−1) + (n−2) + ... + 1\` messages.
 
-#### 30. Hirschberg–Sinclair algorithm ⭐⭐⭐⭐⭐
+#### 30. Hirschberg–Sinclair algorithm
 
 Designed to improve LCR's message complexity — **O(n log n)** messages. Instead of sending IDs all the way around the ring immediately, processors compete in **phases**.
 
@@ -375,7 +375,7 @@ Many candidates → Fewer candidates → Even fewer → One winner
 
 Generally, phase \`k\` → probe distance = \`2^k\`. If a larger ID is encountered, the probe is swallowed. If the probe reaches the end of its neighborhood, a reply is sent back. If both replies return, the processor survives to the next phase. If a processor receives its **own probe**, it is the leader.
 
-#### 32. LCR vs. HS ⭐⭐⭐⭐⭐
+#### 32. LCR vs. HS
 
 | Feature | LCR | Hirschberg–Sinclair |
 | --- | --- | --- |
@@ -389,7 +389,7 @@ Generally, phase \`k\` → probe distance = \`2^k\`. If a larger ID is encounter
 
 The key exam comparison: **LCR = O(n²) messages. HS = O(n log n) messages.**
 
-#### 33. Lower bound ⭐⭐⭐⭐⭐
+#### 33. Lower bound
 
 Very important theoretical result. For an **asynchronous ring whose size is not known beforehand**, any leader-election algorithm requires **Ω(n log n)** messages — so HS's O(n log n) is asymptotically optimal.
 
@@ -403,14 +403,14 @@ Asynchronous ring → Lower bound → Ω(n log n)
 
 A distributed program consists of \`p1, p2, ..., pn\` asynchronous processes. Message transmission delay is **finite but unpredictable**.
 
-#### 35. Three types of events ⭐⭐⭐
+#### 35. Three types of events
 
 At each process:
 1. **Internal event** — only changes the local state
 2. **Send event** — process sends a message
 3. **Receive event** — process receives a message
 
-#### 36. Space-time diagram ⭐⭐⭐
+#### 36. Space-time diagram
 
 Used to represent distributed execution:
 
@@ -424,15 +424,15 @@ P3  ──────────●────────────
 
 Horizontal line → process, dot → event, slanted arrow → message transfer.
 
-#### 37. Partial order ⭐⭐⭐
+#### 37. Partial order
 
 A relation is a **partial order** if it is reflexive, antisymmetric, and transitive. A partially ordered set is called a **poset**. A **total order** is a partial order where every pair of elements is comparable — this becomes important for understanding event ordering.
 
-#### 38. Causality ⭐⭐⭐⭐⭐
+#### 38. Causality
 
 One of the most important parts of the unit. Distributed systems don't have a global physical clock, so we need another way to determine: did event A influence event B? This is **causality**.
 
-#### 39. Happens-before relation ⭐⭐⭐⭐⭐
+#### 39. Happens-before relation
 
 Lamport's **happens-before relation**, written →. For two events, \`e1 → e2\` means e1 causally occurred before e2. Two important sources of causal ordering:
 
@@ -443,7 +443,7 @@ Lamport's **happens-before relation**, written →. For two events, \`e1 → e2\
 
 If \`e1 → e2\` and \`e2 → e3\` then \`e1 → e3\`. Extremely important when solving happens-before diagrams.
 
-#### 41. Concurrent events ⭐⭐⭐⭐⭐
+#### 41. Concurrent events
 
 Two events are concurrent if neither causally affects the other: \`e1 || e2\` means \`NOT(e1 → e2) AND NOT(e2 → e1)\`.
 
@@ -466,7 +466,7 @@ This distinction is very important.
 Causal Ordering ⊂ FIFO ⊂ Non-FIFO
 \`\`\`
 
-#### 44. Logical clocks ⭐⭐⭐⭐⭐
+#### 44. Logical clocks
 
 Because distributed systems don't have a global physical clock, we use **logical clocks**. Three types: scalar time, vector time, matrix time.
 
@@ -478,7 +478,7 @@ A logical clock \`C\` maps an event to a timestamp. Basic consistency requiremen
 
 A clock is **strongly consistent** when \`ei → ej ⇔ C(ei) < C(ej)\` — the clock ordering exactly captures causal ordering.
 
-#### 47. Scalar / Lamport clock ⭐⭐⭐⭐⭐
+#### 47. Scalar / Lamport clock
 
 Proposed by **Leslie Lamport in 1978**. Each process maintains an integer clock \`Ci\`.
 
@@ -492,10 +492,10 @@ Purpose: ensure \`e1 → e2\` implies \`C(e1) < C(e2)\`.
 Lamport clocks can tell us \`e1 → e2\`, but \`C(e1) < C(e2)\` does **NOT necessarily mean** \`e1 → e2\` — the two events may be concurrent. This is why **vector clocks** are more powerful for detecting concurrency.`,
     },
     {
-      heading: "⭐ Most important topics to study first",
+      heading: "Most important topics to study first",
       body: `If you're preparing for an exam, prioritize these.
 
-#### 🔥 Tier 1 — must know
+#### Tier 1 — must know
 
 1. Definition and characteristics of Distributed Systems
 2. Advantages/motivation
@@ -523,7 +523,7 @@ Lamport clocks can tell us \`e1 → e2\`, but \`C(e1) < C(e2)\` does **NOT neces
 24. Logical clocks
 25. Scalar/Lamport clock
 
-#### ⭐ Complexities to memorize
+#### Complexities to memorize
 
 | Algorithm | Message Complexity | Time Complexity |
 | --- | ---: | ---: |
@@ -538,7 +538,7 @@ Lamport clocks can tell us \`e1 → e2\`, but \`C(e1) < C(e2)\` does **NOT neces
 
 The message/time bounds above are directly given in the lecture notes for the spanning-tree and leader-election algorithms.
 
-#### 🧠 One-page memory map
+#### One-page memory map
 
 \`\`\`text
               DISTRIBUTED SYSTEMS
