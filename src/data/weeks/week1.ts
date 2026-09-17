@@ -7,580 +7,108 @@ const week1: WeekData = {
   pdfUrl: "/pdfs/week1-lecture-notes.pdf",
 
   notes: [
-    {
-      heading: "Complete important-topics checklist",
-      body: `Pulled straight from the unit outline — everything below is explicitly covered in the first lecture.
+  {
+    heading: `Definition, properties & components`,
+    body: `A **distributed system** is a collection of independent computers/processors — each with its own memory, processor and OS — that cooperate over **message passing** to solve a problem no single machine could handle efficiently. There's no shared memory and no common physical clock (e.g. a search engine spreads one query across many servers/DBs and merges the results).
 
-**Unit 1 — Introduction to Distributed Systems**
+**Five defining properties**: **heterogeneity** (mixed hardware/software), **concurrency** (simultaneous execution), **shared data** (common data accessed by many), **no global clock** (each processor has its own notion of time), **interdependencies** (independent processors still depend on each other to finish a task).
 
-- Definition of Distributed System
-- Characteristics / Properties
-- Components of a Distributed System
-- Middleware
-- Layered Architecture
-- Motivation for Distributed Systems
-- Advantages
-- Reliability
-  - Availability
-  - Integrity
-  - Fault tolerance
-- Scalability
-- Modularity and incremental expandability
-- Design challenges
-- Transparency
-  - Access
-  - Location
-  - Migration
-  - Relocation
-  - Replication
-  - Concurrency
-  - Failure
-- Distributed Algorithms
-- Complexity measures
-- Asynchrony
-- Local knowledge / local view
-- Failures
-- Safety vs Liveness
-- Algorithmic challenges
-- Applications of distributed computing`,
-    },
-    {
-      heading: "Unit 1 — Introduction to Distributed Systems",
-      body: `#### 1. Definition
+**Layered structure**: Application → **Middleware** → Network Protocol Stack → OS → Hardware. Middleware is the distributed software layer (CORBA, RPC, DCOM, RMI, MPI) that lets applications on different machines communicate and cooperate, hiding differences and providing **transparency**; middleware is *not* the OS — it sits above the OS and network stack.`,
+  },
+  {
+    heading: `Motivation, reliability & design challenges`,
+    body: `**Why go distributed**: inherently distributed computation (banking, reaching consensus between distant parties), resource sharing, remote data/resource access, enhanced reliability via replication, better performance/cost ratio, scalability, and modularity (components added/replaced independently).
 
-A **distributed system** is a collection of independent computers/processors that cooperate to solve a problem that cannot be solved efficiently by one computer.
+**Reliability** has three parts: **availability** (stays accessible), **integrity** (data/state stays correct under concurrent access), **fault tolerance** (keeps functioning or recovers despite failures).
 
-Important characteristics:
-- No shared memory
-- No common physical clock
-- Communication occurs through **message passing**
-- Each computer has its own memory, processor, and operating system
-- Components cooperate to achieve a common goal
-
-**Simple example.** Consider Google Search. Instead of one computer handling everything:
-
-\`\`\`text
-             User
-               |
-          Search Request
-               |
-       -------------------
-       |        |        |
-     Server   Server   Server
-       |        |        |
-      DB       DB       DB
-       \\        |       /
-        ---- Results ---
-\`\`\`
-
-Multiple computers cooperate → **Distributed System**.
-
-#### 2. Properties of distributed systems
-
-Remember these **5 important properties**:
-
-1. **Heterogeneity** — different hardware/software components can coexist
-2. **Concurrency** — multiple programs/processes execute simultaneously
-3. **Shared data** — multiple entities may access common data
-4. **No global clock** — every processor has its own notion of time
-5. **Interdependencies** — although processors are independent, they depend on each other to accomplish tasks
-
-> **Exam question — list the characteristics of distributed systems.** Answer: heterogeneity, concurrency, shared data, absence of a global clock, and interdependencies.
-
-#### 3. Components of a distributed system
-
-A typical distributed system consists of:
-
-\`\`\`text
-Application
-     ↓
-Middleware
-     ↓
-Network Protocol Stack
-     ↓
-Operating System
-     ↓
-Hardware
-\`\`\`
-
-**Middleware** is the distributed software layer that allows applications running on different computers to communicate and cooperate. It hides differences between machines and provides **transparency**. Examples: CORBA, RPC, DCOM, RMI, MPI.
-
-Important distinction: **Middleware ≠ Operating System** — middleware sits above the OS and network stack and provides distributed-system functionality.
-
-#### 4. Motivation for distributed systems
-
-1. **Inherently distributed computation** — some problems naturally involve geographically separated entities (banking, reaching consensus between distant parties)
-2. **Resource sharing** — databases, peripherals, libraries shared among multiple computers
-3. **Remote data/resource access** — remote databases, supercomputers, remote devices
-4. **Enhanced reliability** — resources can be replicated so failure of one component doesn't necessarily stop the entire system
-5. **Increased performance/cost ratio** — multiple systems share workload and resources
-6. **Scalability** — more processors can be added as the system grows
-7. **Modularity** — components can be added/replaced independently
-
-#### 5. Reliability
-
-Reliability has **three particularly important aspects**:
-
-\`\`\`text
-Reliability
-   |
-   |--- Availability      the resource/service should remain accessible
-   |--- Integrity         data/state stays correct even with concurrent access
-   |--- Fault tolerance    system continues functioning or recovers despite failures
-\`\`\`
-
-#### 6. Design challenges
-
-The notes divide challenges into **system-level** and **algorithmic** issues.
-
-**Major system challenges:**
-- **Communication** — how do processors communicate?
-- **Process management** — processes, threads, code migration, mobile agents
-- **Synchronization** — coordination when accessing shared resources: mutual exclusion, leader election, clocks, global state recording
-- **Fault tolerance** — must maintain correctness despite node/link/process failures, via checkpointing, recovery, consensus, failure detection, distributed commit, self-stabilization
-
-#### 7. Transparency
-
-**Very important for exams.** Transparency means **hiding the complexity/implementation details of the distributed system from the user**. There are **7 types**:
+**Major design challenges** split into system-level issues — **communication**, **process management** (processes/threads/code migration/mobile agents), **synchronization** (mutual exclusion, leader election, clocks, global state) and **fault tolerance** (checkpointing, recovery, consensus, failure detection, distributed commit, self-stabilization) — and algorithmic issues (below).`,
+  },
+  {
+    heading: `Transparency, algorithmic challenges & applications`,
+    body: `**Transparency** = hiding the distributed system's complexity/implementation from the user. **7 types**:
 
 | Type | Meaning |
 | --- | --- |
-| Access transparency | Hides differences in data representation/access |
-| Location transparency | User doesn't need to know where the resource is |
-| Migration transparency | Resource can move without changing its name |
-| Relocation transparency | Resource can move while being accessed |
-| Replication transparency | User doesn't know multiple copies exist |
-| Concurrency transparency | Hides simultaneous access by multiple processes |
-| Failure transparency | Hides failures/recovery from the user |
+| Access | Hides differences in data representation/access |
+| Location | User doesn't need to know where a resource is |
+| Migration | A resource can move without changing its name |
+| Relocation | A resource can move while being accessed |
+| Replication | User doesn't know multiple copies exist |
+| Concurrency | Hides simultaneous access by multiple processes |
+| Failure | Hides failures/recovery from the user |
 
-Memorize all 7.
+Distributed algorithms add **communication complexity** (message count/size, shared variables, faulty vs. non-faulty components) on top of ordinary time/space complexity, and are the source of many lower-bound/impossibility results. Three **fundamental difficulties** every distributed algorithm must cope with: **asynchrony** (can't know exactly when another process executes or a message arrives), **limited/local knowledge** (a process only knows what it has received, never the full global state), and **failures** (components can fail independently while others keep running).
 
-#### 8. Distributed algorithms
+Further **algorithmic challenges**: time & global state without a global clock; synchronization (leader election, mutual exclusion, termination detection, garbage collection); fault tolerance (consensus, replication, quorums, distributed DBs, checkpointing/recovery, failure detection); group communication (multicast, ordered delivery); distributed shared memory (a shared-memory abstraction built over message passing).
 
-In a normal algorithm we commonly consider time and space complexity. In distributed algorithms, an additional major concern is **communication complexity**: number of messages, size of messages, shared variables, and the number of faulty vs. non-faulty components. Distributed systems also lead to important lower bounds, impossibility results, and negative results.
+**Applications**: mobile systems, sensor networks, ubiquitous/pervasive computing, peer-to-peer computing, distributed data mining, grid computing, and security in distributed systems (confidentiality, authentication, availability).`,
+  },
+  {
+    heading: `Message-passing model, safety/liveness & sync vs. async`,
+    body: `Processors communicate over **channels** whose layout fixes the network **topology**; a processor is modeled as a **state machine**, and a channel holds messages via \`outbuf\` at the sender and \`inbuf\` at the receiver. A **configuration** is a snapshot of the whole system — every processor's state plus every channel/buffer's contents. Two events change configurations: **deliver** (moves a message \`outbuf\` → \`inbuf\`) and **computation** (a processor applies its transition function to its state + incoming messages, producing a new state and new outgoing messages). An **execution** is the alternating sequence Configuration → Event → Configuration → ...
 
-#### 9. Three fundamental difficulties
+**Safety** = "nothing bad ever happens" (e.g. two processes never enter CS together); **liveness** = "something good eventually happens" (e.g. a requester eventually gets CS).
 
-This is **VERY important**. Distributed algorithms must deal with:
+**Synchronous** systems run in lockstep **rounds** (send → deliver → compute, repeat) with known timing bounds — easier to analyze. **Asynchronous** systems have no fixed bound on message delay or execution time — harder to analyze, and time isn't measured in rounds.`,
+  },
+  {
+    heading: `Broadcast, convergecast & spanning trees`,
+    body: `**Broadcast** sends information from one root to everyone over an existing rooted spanning tree: root sends to children, they forward to their own children, and so on. Cost: **n − 1** messages, time = **depth d**, in both sync and async models. **Convergecast** is the reverse — leaves send toward the root; each parent waits for all children, aggregates, and forwards up (broadcast = one→many, convergecast = many→one).
 
-1. **Asynchrony** — you cannot precisely know when another process will execute or when a message will arrive
-2. **Limited knowledge / local view** — a processor only knows information it has received; it does not have a complete view of the global system
-3. **Failures** — components can fail independently; one processor may fail while the others continue working
+A **tree** is connected and acyclic; a **spanning tree** touches every processor; a **rooted spanning tree** additionally designates one root. **Building a rooted spanning tree when the root is known**: root sends \`M\` to its neighbors; the first time a non-root node sees \`M\`, the sender becomes its parent, it replies \`parent\` and forwards \`M\` onward; a repeat receipt gets a \`reject\`. Cost: **O(m)** messages, **O(diameter)** time. Synchronous execution naturally produces a **BFS** tree; asynchronous execution does not necessarily.
 
-#### 10. Algorithmic challenges
+**Forcing a DFS tree** in an async system: explore neighbors **one at a time**, waiting for a reply before trying the next. Cost: **O(m)** messages, **O(m)** time.
 
-- **Time and global state** — how do we determine time and system state without a global clock?
-- **Synchronization** — leader election, mutual exclusion, termination detection, garbage collection
-- **Fault tolerance** — consensus, replication, quorum systems, distributed databases, checkpointing, recovery, failure detection
-- **Group communication** — multicast, ordered message delivery
-- **Distributed shared memory** — provides the abstraction of shared memory while internally using message passing
+**Spanning tree without a predefined root**: processors need **unique IDs**; every processor runs the DFS algorithm assuming *it* is the root, tagging messages with its own ID, and larger IDs win when copies collide. Cost: **O(nm)** messages, **O(m)** time.`,
+  },
+  {
+    heading: `Leader election: rings, LCR & Hirschberg–Sinclair`,
+    body: `**Leader election**: exactly one processor must end up Leader (everyone else Non-leader) — used to coordinate spanning-tree construction, token recovery, and general coordination. On a **ring** (\`P1→P2→...→Pn→P1\`), an **oriented** ring gives every processor a shared notion of left/right.
 
-#### 11. Applications
+In an **anonymous ring** (no unique IDs), leader election is **impossible**, even with known ring size and a synchronous system: identical initial states mean identical received messages and identical transitions everywhere, so either every processor becomes leader or none does — violating "exactly one." Algorithms are **uniform** if the same state machine works regardless of ring size \`n\`, or **non-uniform** if they use knowledge of \`n\`.
 
-1. Mobile systems
-2. Sensor networks
-3. Ubiquitous/pervasive computing
-4. Peer-to-peer computing
-5. Distributed data mining
-6. Grid computing
-7. Security in distributed systems — confidentiality, authentication, availability`,
-    },
-    {
-      heading: "Unit 2 — Message Passing Systems",
-      body: `#### 12. Message-passing model
+With unique IDs, the **LeLann–Chang–Roberts (LCR)** algorithm elects the largest ID: every processor sends its ID around the ring; on receiving ID \`j\`, forward it if \`j > own_ID\`, discard it if \`j < own_ID\`, and elect yourself if \`j == own_ID\` (your own ID came back around). Worst case **Θ(n²)** messages, **O(n)** time.
 
-Processors communicate by sending messages through communication channels.
-
-\`\`\`text
-P1 -------- Channel -------- P2
- |                            |
-Memory                      Memory
-\`\`\`
-
-The network topology is determined by the connections/channels between processors. A processor is modeled as a **state machine**. A channel is represented using \`outbuf\` at the sender and \`inbuf\` at the receiver.
-
-#### 13. Configuration
-
-A **configuration** represents the current state of the entire distributed system: processor states, local variables, incoming messages, and channel/outgoing buffer states.
-
-> **Configuration = snapshot of the entire system at a particular point.**
-
-#### 14. Events
-
-Two major events in the basic message-passing model:
-
-1. **Deliver event** — moves a message: sender \`outbuf\` → receiver \`inbuf\`
-2. **Computation event** — a processor takes its current accessible state, applies its transition function, processes incoming messages, updates its local state, and produces outgoing messages
-
-#### 15. Execution
-
-\`\`\`text
-Configuration → Event → Configuration → Event → Configuration → ...
-\`\`\`
-
-> **Execution = sequence of configurations and events.**
-
-#### 16. Safety vs. Liveness
-
-- **Safety** — "nothing bad ever happens." E.g. two processors should never enter the critical section simultaneously.
-- **Liveness** — "something good eventually happens." E.g. a requesting process eventually gets access to the critical section.
-
-Easy memory trick: **Safety = nothing bad. Liveness = something good eventually.** The notes explicitly use this distinction when defining admissible executions.
-
-#### 17. Synchronous vs. Asynchronous systems
-
-**Synchronous** — processors operate in rounds:
-
-\`\`\`text
-Round 1 → Send messages → Messages delivered → Compute → Round 2
-\`\`\`
-
-Every processor operates in lockstep; time is measured in **rounds**.
-
-**Asynchronous** — no fixed upper bound on message delivery time or processor execution time. A message may be delayed arbitrarily long.
-
-| Synchronous | Asynchronous |
-| --- | --- |
-| Lockstep execution | No lockstep |
-| Rounds | No fixed rounds |
-| Known timing bounds | No fixed timing bounds |
-| Easier to analyze | Harder to analyze |
-| Time = rounds | Time depends on execution |
-
-#### 18. Broadcast
-
-Purpose: send information from one processor to all processors. Assume a rooted spanning tree already exists.
-
-\`\`\`text
-             Root
-            /    \\
-           A      B
-         /  \\      \\
-        C    D      E
-\`\`\`
-
-\`\`\`text
-Root sends M → Children receive M → Children forward M → All nodes receive M
-\`\`\`
-
-**Complexity:** messages = **n − 1**, time = **depth d**. This holds in both synchronous and asynchronous models.
-
-#### 19. Convergecast
-
-Basically the **opposite of broadcast** — collect information from all processors toward the root. Leaves send information to parents; each parent waits for all children, combines/aggregates the information, then sends the result upward.
-
-Easy memory: **Broadcast → one to many. Convergecast → many to one.**
-
-#### 20. Spanning tree
-
-A **tree** is connected and has no cycles. A **spanning tree** is a tree containing all processors. A **rooted spanning tree** additionally has one designated root.
-
-#### 21. Finding a spanning tree with a root
-
-1. Root sends message \`M\` to all neighbors.
-2. When a non-root node receives \`M\` for the first time: the sender becomes its parent, it sends \`parent\`, and it forwards \`M\` to other neighbors.
-3. If it receives \`M\` again, it sends \`reject\`.
-4. Parent/reject responses help construct the tree.
-
-**Complexity:** messages = **O(m)**, time = **O(diameter)**.
-
-Important distinction: **synchronous execution → BFS tree**, **asynchronous execution → not necessarily BFS**.
-
-#### 22. DFS spanning tree
-
-The previous algorithm does not guarantee DFS in asynchronous systems. To force DFS: explore neighbors **one at a time**, waiting for a response before moving to the next neighbor. This guarantees a DFS spanning tree.
-
-**Complexity:** messages = **O(m)**, time = **O(m)**.
-
-#### 23. Spanning tree without a root
-
-If there is no predefined root: processors need **unique IDs**. Every processor starts a DFS algorithm assuming itself is root. Messages carry the initiator's ID; when two copies collide, the larger ID wins.
-
-**Complexity:** messages = **O(nm)**, time = **O(m)**.`,
-    },
-    {
-      heading: "Unit 3 — Leader Election",
-      body: `#### 24. Leader election
-
-Very important topic. Goal: **exactly one processor** should be elected as leader. Every processor eventually decides Leader or Non-leader — exactly one must choose Leader.
-
-Why? A leader can coordinate spanning tree construction, token recovery, and general system coordination.
-
-#### 25. Ring network
-
-Processors form a ring:
-
-\`\`\`text
-P1 → P2 → P3
-↑          ↓
-P6 ← P5 ← P4
-\`\`\`
-
-In an **oriented ring**, processors have a common notion of left and right.
-
-#### 26. Anonymous ring
-
-Processors have **no unique IDs**.
-
-> **Theorem.** Leader election is impossible in an anonymous ring, even if the ring size is known and the system is synchronous.
-
-Why? Initially all processors are identical:
-
-\`\`\`text
-Same initial state → Same messages → Same received messages
-      → Same state transitions → All behave identically
-\`\`\`
-
-If one becomes leader, all would become leaders — that violates "exactly one leader."
-
-> **Exam question — why is leader election impossible in an anonymous ring?** This proof is very important.
-
-#### 27. Uniform vs. non-uniform
-
-- **Uniform algorithm** — does not use ring size; the same state machine works for different ring sizes.
-- **Non-uniform algorithm** — knows the ring size; a different algorithm/state machine can be designed for each \`n\`.
-
-#### 28. Ring with unique IDs
-
-Each processor has a unique identifier, e.g. \`3 → 37 → 19 → 4 → 25 → back to 3\`. The processor's **index** and **ID** are different — index is used for analysis, ID is what the processor actually knows.
-
-#### 29. LCR algorithm
-
-**LeLann–Chang–Roberts algorithm.** Goal: elect the processor with the largest ID.
-
-Each processor initially sends its ID. When a processor receives ID \`j\`:
-- If \`j > own_ID\` → forward \`j\`
-- If \`j < own_ID\` → discard it
-- If \`j == own_ID\` → the processor elects itself
-
-**Example:** IDs \`3 → 8 → 5 → 2\`. Largest ID = 8. Eventually \`8 → 5 → 2 → 3 → 8\` — processor 8 receives its own ID → **8 becomes leader**.
-
-**Complexity:** time = **O(n)**, worst-case messages = **Θ(n²)**. The worst arrangement causes \`n + (n−1) + (n−2) + ... + 1\` messages.
-
-#### 30. Hirschberg–Sinclair algorithm
-
-Designed to improve LCR's message complexity — **O(n log n)** messages. Instead of sending IDs all the way around the ring immediately, processors compete in **phases**.
-
-In phase \`k\`, a processor checks a neighborhood of approximately \`2^k\` in each direction. Only processors with sufficiently large IDs survive to the next phase:
-
-\`\`\`text
-Many candidates → Fewer candidates → Even fewer → One winner
-\`\`\`
-
-#### 31. HS phases
-
-- **Phase 0** — every processor probes its two immediate neighbors.
-- **Phase 1** — winners probe farther.
-- **Phase 2** — probe distance increases again.
-
-Generally, phase \`k\` → probe distance = \`2^k\`. If a larger ID is encountered, the probe is swallowed. If the probe reaches the end of its neighborhood, a reply is sent back. If both replies return, the processor survives to the next phase. If a processor receives its **own probe**, it is the leader.
-
-#### 32. LCR vs. HS
+**Hirschberg–Sinclair** improves message complexity to **O(n log n)** using phased probing: in phase \`k\`, a surviving candidate probes roughly \`2^k\` hops in each direction; a probe hitting a larger ID is swallowed, one that survives its whole neighborhood triggers a reply back, and a candidate that gets both replies advances to the next phase; receiving your own probe back makes you leader.
 
 | Feature | LCR | Hirschberg–Sinclair |
 | --- | --- | --- |
-| Basic idea | Forward IDs | Probes + phases |
+| Basic idea | Forward IDs | Phased probes |
 | Winner | Largest ID | Largest ID |
-| Time | O(n) | Depends on execution model |
-| Worst messages | Θ(n²) | O(n log n) |
+| Worst-case messages | Θ(n²) | O(n log n) |
 | Complexity | Simple | More complex |
-| Synchronous | Yes | Yes |
-| Asynchronous | Yes | Yes |
 
-The key exam comparison: **LCR = O(n²) messages. HS = O(n log n) messages.**
+For an **asynchronous ring of unknown size**, any leader-election algorithm needs **Ω(n log n)** messages — so Hirschberg–Sinclair is asymptotically optimal.`,
+  },
+  {
+    heading: `Distributed computation model: causality & logical clocks`,
+    body: `A distributed program is \`n\` asynchronous processes with finite but unpredictable message delay. Each process generates three event types: **internal** (local state only), **send**, and **receive** — visualized on a **space-time diagram** (horizontal line = process, dot = event, diagonal arrow = message). A relation is a **partial order** if reflexive, antisymmetric and transitive (a **poset**); a **total order** additionally makes every pair comparable.
 
-#### 33. Lower bound
+**Causality**: without a global clock, Lamport's **happens-before relation** \`→\` captures "did A influence B?" \`e1 → e2\` holds when they occur in order on the **same process**, or when \`e1 = send(m)\` and \`e2 = receive(m)\`; the relation is **transitive** (\`e1→e2, e2→e3 ⟹ e1→e3\`). Two events are **concurrent** (\`e1 || e2\`) when neither happens-before the other; concurrency need not mean the same physical instant — **physical concurrency** (same instant) and **logical concurrency** (no causal link) are different things.
 
-Very important theoretical result. For an **asynchronous ring whose size is not known beforehand**, any leader-election algorithm requires **Ω(n log n)** messages — so HS's O(n log n) is asymptotically optimal.
+**Communication models** order messages differently: **FIFO** (per-sender order preserved), **non-FIFO** (arbitrary order), **causal ordering** (\`send(m1)→send(m2)\` forces \`receive(m1)→receive(m2)\`) — Causal ⊂ FIFO ⊂ Non-FIFO.
 
-\`\`\`text
-Asynchronous ring → Lower bound → Ω(n log n)
-\`\`\``,
-    },
-    {
-      heading: "Unit 4 — Models of Distributed Computation",
-      body: `#### 34. Distributed program
-
-A distributed program consists of \`p1, p2, ..., pn\` asynchronous processes. Message transmission delay is **finite but unpredictable**.
-
-#### 35. Three types of events
-
-At each process:
-1. **Internal event** — only changes the local state
-2. **Send event** — process sends a message
-3. **Receive event** — process receives a message
-
-#### 36. Space-time diagram
-
-Used to represent distributed execution:
-
-\`\`\`text
-P1  ───●────●────────●────
-          \\            \\
-P2  ───────●────●──────●──
-             \\
-P3  ──────────●────────────
-\`\`\`
-
-Horizontal line → process, dot → event, slanted arrow → message transfer.
-
-#### 37. Partial order
-
-A relation is a **partial order** if it is reflexive, antisymmetric, and transitive. A partially ordered set is called a **poset**. A **total order** is a partial order where every pair of elements is comparable — this becomes important for understanding event ordering.
-
-#### 38. Causality
-
-One of the most important parts of the unit. Distributed systems don't have a global physical clock, so we need another way to determine: did event A influence event B? This is **causality**.
-
-#### 39. Happens-before relation
-
-Lamport's **happens-before relation**, written →. For two events, \`e1 → e2\` means e1 causally occurred before e2. Two important sources of causal ordering:
-
-- **Same process** — \`e1 → e2\` because e1 occurs before e2 on the same process
-- **Message** — \`send(m) → receive(m)\` because receiving a message depends on sending it
-
-#### 40. Transitivity
-
-If \`e1 → e2\` and \`e2 → e3\` then \`e1 → e3\`. Extremely important when solving happens-before diagrams.
-
-#### 41. Concurrent events
-
-Two events are concurrent if neither causally affects the other: \`e1 || e2\` means \`NOT(e1 → e2) AND NOT(e2 → e1)\`.
-
-Important: concurrent does **not** necessarily mean they happened at exactly the same physical time — they can occur at different physical times but still be logically concurrent.
-
-#### 42. Physical vs. logical concurrency
-
-- **Physical concurrency** — events happen at the same physical instant
-- **Logical concurrency** — events have no causal relationship
-
-This distinction is very important.
-
-#### 43. Communication models
-
-- **FIFO** — messages from the same sender are delivered in the same order they were sent
-- **Non-FIFO** — messages may be delivered in arbitrary order
-- **Causal ordering** — causally related messages must be delivered in causal order
-
-\`\`\`text
-Causal Ordering ⊂ FIFO ⊂ Non-FIFO
-\`\`\`
-
-#### 44. Logical clocks
-
-Because distributed systems don't have a global physical clock, we use **logical clocks**. Three types: scalar time, vector time, matrix time.
-
-#### 45. Logical clock consistency
-
-A logical clock \`C\` maps an event to a timestamp. Basic consistency requirement: if \`ei → ej\` then \`C(ei) < C(ej)\` — if event A causally precedes event B, A's timestamp must be smaller.
-
-#### 46. Strong consistency
-
-A clock is **strongly consistent** when \`ei → ej ⇔ C(ei) < C(ej)\` — the clock ordering exactly captures causal ordering.
-
-#### 47. Scalar / Lamport clock
-
-Proposed by **Leslie Lamport in 1978**. Each process maintains an integer clock \`Ci\`.
-
-- **Rule R1** — before an event: \`Ci = Ci + d\` (usually \`d = 1\`)
-- **Message rule** — a message carries the sender's timestamp; at the receiver: \`Cj = max(Cj, received_timestamp) + 1\`
-
-Purpose: ensure \`e1 → e2\` implies \`C(e1) < C(e2)\`.
-
-#### 48. Scalar clock limitation
-
-Lamport clocks can tell us \`e1 → e2\`, but \`C(e1) < C(e2)\` does **NOT necessarily mean** \`e1 → e2\` — the two events may be concurrent. This is why **vector clocks** are more powerful for detecting concurrency.`,
-    },
-    {
-      heading: "Most important topics to study first",
-      body: `If you're preparing for an exam, prioritize these.
-
-#### Tier 1 — must know
-
-1. Definition and characteristics of Distributed Systems
-2. Advantages/motivation
-3. Transparency — **all 7 types**
-4. System challenges
-5. Synchronous vs asynchronous systems
-6. Message-passing model
-7. Broadcast
-8. Convergecast
-9. Spanning tree algorithms
-10. BFS vs DFS spanning tree
-11. Leader election problem
-12. Anonymous ring impossibility theorem
-13. **LCR algorithm**
-14. **Hirschberg-Sinclair algorithm**
-15. LCR vs HS complexity
-16. Leader-election lower bound
-17. Distributed execution model
-18. Internal/send/receive events
-19. Space-time diagrams
-20. Happens-before relation
-21. Causality
-22. Concurrent events
-23. FIFO vs non-FIFO vs causal ordering
-24. Logical clocks
-25. Scalar/Lamport clock
-
-#### Complexities to memorize
-
-| Algorithm | Message Complexity | Time Complexity |
-| --- | ---: | ---: |
-| Broadcast | **n − 1** | **O(d)** |
-| Convergecast | Based on tree edges | **O(d)** |
-| Rooted spanning tree | **O(m)** | **O(diam)** |
-| DFS spanning tree | **O(m)** | **O(m)** |
-| Spanning tree without root | **O(nm)** | **O(m)** |
-| LCR Leader Election | **Θ(n²)** worst case | **O(n)** |
-| Hirschberg-Sinclair | **O(n log n)** | — |
-| Async LE lower bound | **Ω(n log n)** | — |
-
-The message/time bounds above are directly given in the lecture notes for the spanning-tree and leader-election algorithms.
-
-#### One-page memory map
-
-\`\`\`text
-              DISTRIBUTED SYSTEMS
-                      |
-       ┌──────────────┼──────────────┐
-       ↓              ↓              ↓
-   Basics       Message Passing   Coordination
-       |              |              |
- Definition       Sync/Async      Leader Election
- Properties       Events               |
- Middleware       Broadcast        Anonymous Ring
- Transparency     Convergecast          |
- Challenges       Spanning Tree      LCR
-       |              |              |
- Fault tolerance  BFS / DFS           HS
- Scalability      O(m) / O(nm)        |
-                                    Ω(nlogn)
-                      |
-                      ↓
-                DISTRIBUTED TIME
-                      |
-              ┌───────┴───────┐
-              ↓               ↓
-          Causality       Logical Clock
-              |               |
-       Happens-before    Scalar
-              |           Vector
-       Concurrent        Matrix
-       events
-              |
-       FIFO / Causal
-        ordering
-\`\`\`
-
-#### Final priority order
-
-If you have limited time, study in this order:
-
-**1. LCR + HS → 2. Synchronous/Asynchronous → 3. Spanning Trees → 4. Happens-Before/Causality → 5. Lamport Clock → 6. Transparency → 7. Message-Passing Model → 8. Distributed System basics.**
-
-> The uploaded course outline also shows that the broader unit continues into **Distributed MST, Global State/Snapshot Algorithms, Distributed Mutual Exclusion, Distributed Shared Memory, Consensus, Checkpointing/Rollback, DHT, P2P/Overlay Graphs, GFS, HDFS/MapReduce, Spark, and Sensor Networks**.`,
-    },
+**Logical clocks** (scalar, vector, matrix) stand in for a physical clock. Clock \`C\` is **consistent** if \`ei→ej ⟹ C(ei)<C(ej)\`; **strongly consistent** if the converse holds too (\`⇔\`). **Lamport's scalar clock** (1978): each process keeps integer \`Ci\`; **R1** increments \`Ci\` before every event; on receiving a timestamped message, \`Cj = max(Cj, received) + 1\`. This guarantees \`e1→e2 ⟹ C(e1)<C(e2)\`, but **not the converse** — \`C(e1)<C(e2)\` doesn't imply \`e1→e2\`, since the two could simply be concurrent, which is why **vector clocks** exist to detect concurrency directly.`,
+  },
+  {
+    heading: `Last-minute revision sheet`,
+    body: `- **5 properties**: heterogeneity, concurrency, shared data, no global clock, interdependencies.
+- **7 transparencies**: access, location, migration, relocation, replication, concurrency, failure.
+- **3 fundamental difficulties**: asynchrony, limited/local knowledge, failures.
+- **Broadcast**: \`n−1\` messages, \`O(d)\` time. **Convergecast**: many → one, reverse of broadcast.
+- **Rooted spanning tree**: \`O(m)\` messages, \`O(diam)\` time; sync execution → BFS tree.
+- **Forced DFS spanning tree**: \`O(m)\` messages, \`O(m)\` time (probe neighbors one at a time).
+- **Rootless spanning tree**: \`O(nm)\` messages, \`O(m)\` time; largest ID wins collisions.
+- **Anonymous ring**: leader election is impossible.
+- **LCR**: worst case \`Θ(n²)\` messages, \`O(n)\` time; largest ID wins.
+- **Hirschberg–Sinclair**: \`O(n log n)\` messages via phased \`2^k\` probing.
+- **Async ring lower bound**: \`Ω(n log n)\` messages.
+- **Safety** = nothing bad ever happens; **liveness** = something good eventually happens.
+- **Happens-before \`→\`**: same-process order + \`send(m)→receive(m)\`; transitive.
+- **Concurrent**: \`e1 || e2\` = neither happens-before the other.
+- **Ordering models**: Causal ⊂ FIFO ⊂ Non-FIFO.
+- **Lamport clock**: R1 increments before each event; on receive, \`Cj=max(Cj,ts)+1\`; guarantees \`→ ⟹ <\`, not the converse.`,
+  }
   ],
 
   slides: [
