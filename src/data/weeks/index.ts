@@ -1,6 +1,7 @@
 import type { WeekData } from "../../types";
 import week1 from "./week1";
 import week2 from "./week2";
+import week3 from "./week3";
 
 const emptyWeek = (n: number, title: string): WeekData => ({
   week: n,
@@ -15,11 +16,11 @@ const emptyWeek = (n: number, title: string): WeekData => ({
 const TOTAL_WEEKS = 8;
 
 const placeholderWeeks: WeekData[] = Array.from(
-  { length: TOTAL_WEEKS - 2 },
-  (_, i) => emptyWeek(i + 3, `Week ${i + 3}`)
+  { length: TOTAL_WEEKS - 3 },
+  (_, i) => emptyWeek(i + 4, `Week ${i + 4}`)
 );
 
-export const weeks: WeekData[] = [week1, week2, ...placeholderWeeks];
+export const weeks: WeekData[] = [week1, week2, week3, ...placeholderWeeks];
 
 export const getWeek = (n: number): WeekData | undefined =>
   weeks.find((w) => w.week === n);
