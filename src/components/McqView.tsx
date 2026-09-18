@@ -6,6 +6,7 @@ import { EmptyState, topicTint } from "./NotesView";
 export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [revealAll, setRevealAll] = useState(false);
 
   const ordered = useMemo(() => {
     if (shuffleSeed === 0) return mcqs;
@@ -20,7 +21,10 @@ export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
   const answeredCount = Object.keys(answers).length;
   const correctCount = mcqs.filter((q) => answers[q.id] === q.correctIndex).length;
 
-  const reset = () => setAnswers({});
+  const reset = () => {
+    setAnswers({});
+    setRevealAll(false);
+  };
 
   return (
     <div>
@@ -34,6 +38,14 @@ export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
           {answeredCount} answered · {mcqs.length} total
         </span>
         <div className="flex gap-4">
+          <button
+            onClick={() => setRevealAll((r) => !r)}
+            className="text-sm focus-ring rounded"
+            style={{ color: revealAll ? "var(--color-success)" : "var(--color-accent)" }}
+            aria-pressed={revealAll}
+          >
+            {revealAll ? "Hide answers" : "Show answers"}
+          </button>
           <button
             onClick={() => setShuffleSeed((s) => s + 1)}
             className="text-sm focus-ring rounded"
@@ -58,6 +70,7 @@ export default function McqView({ mcqs }: { mcqs: Mcq[] }) {
             index={i + 1}
             mcq={q}
             selected={answers[q.id]}
+            reveal={revealAll}
             onSelect={(idx) => setAnswers((a) => ({ ...a, [q.id]: idx }))}
           />
         ))}
@@ -70,14 +83,17 @@ function McqCard({
   index,
   mcq,
   selected,
+  reveal,
   onSelect,
 }: {
   index: number;
   mcq: Mcq;
   selected?: number;
+  reveal: boolean;
   onSelect: (idx: number) => void;
 }) {
   const answered = selected !== undefined;
+  const shown = answered || reveal;
   const tint = topicTint(mcq.topic);
 
   return (
@@ -101,17 +117,17 @@ function McqCard({
           const isSelected = idx === selected;
           let border = "var(--color-hairline)";
           let bg = "transparent";
-          if (answered && isCorrect) {
+          if (shown && isCorrect) {
             border = "var(--color-success)";
             bg = "color-mix(in srgb, var(--color-success) 10%, transparent)";
-          } else if (answered && isSelected && !isCorrect) {
+          } else if (shown && isSelected && !isCorrect) {
             border = "var(--color-danger)";
             bg = "color-mix(in srgb, var(--color-danger) 10%, transparent)";
           }
           return (
             <button
               key={idx}
-              disabled={answered}
+              disabled={shown}
               onClick={() => onSelect(idx)}
               className="focus-ring w-full text-left rounded-md border px-4 py-2.5 text-sm transition-colors disabled:cursor-default"
               style={{ borderColor: border, background: bg }}
@@ -125,19 +141,27 @@ function McqCard({
         })}
       </div>
 
-      {answered && (
+      {shown && (
         <div
           className="mt-4 rounded-md px-4 py-3 text-sm leading-relaxed"
           style={{
             background: "var(--color-surface-2)",
             color: "var(--color-text-muted)",
             borderLeft: `2px solid ${
-              selected === mcq.correctIndex ? "var(--color-success)" : "var(--color-danger)"
+              !answered
+                ? "var(--color-accent)"
+                : selected === mcq.correctIndex
+                  ? "var(--color-success)"
+                  : "var(--color-danger)"
             }`,
           }}
         >
           <span style={{ color: "var(--color-text)", fontWeight: 500 }}>
-            {selected === mcq.correctIndex ? "Correct. " : "Not quite. "}
+            {!answered
+              ? `Answer: ${String.fromCharCode(65 + mcq.correctIndex)}. `
+              : selected === mcq.correctIndex
+                ? "Correct. "
+                : "Not quite. "}
           </span>
           {mcq.explanation}
         </div>
