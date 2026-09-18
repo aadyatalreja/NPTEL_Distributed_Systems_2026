@@ -3,6 +3,7 @@ import week1 from "./week1";
 import week2 from "./week2";
 import week3 from "./week3";
 import week4 from "./week4";
+import week5 from "./week5";
 
 const emptyWeek = (n: number, title: string): WeekData => ({
   week: n,
@@ -17,8 +18,8 @@ const emptyWeek = (n: number, title: string): WeekData => ({
 const TOTAL_WEEKS = 8;
 
 const placeholderWeeks: WeekData[] = Array.from(
-  { length: TOTAL_WEEKS - 4 },
-  (_, i) => emptyWeek(i + 5, `Week ${i + 5}`)
+  { length: TOTAL_WEEKS - 5 },
+  (_, i) => emptyWeek(i + 6, `Week ${i + 6}`)
 );
 
 export const weeks: WeekData[] = [
@@ -26,6 +27,7 @@ export const weeks: WeekData[] = [
   week2,
   week3,
   week4,
+  week5,
   ...placeholderWeeks,
 ];
 
